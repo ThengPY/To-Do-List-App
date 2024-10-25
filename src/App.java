@@ -1,6 +1,7 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -28,21 +29,23 @@ public class App extends Application {
         taskListView = new ListView<>();
         taskListView.setMaxWidth(400);
         
+        // Mouse Click on taskListView Event
         taskListView.setOnMouseClicked(e -> {
             Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
-            
-            if (e.getClickCount() == 2) {
-                clearInputFields();
-                selectedTask.toggleComplete(); // Change the completion status
-            }
-            if (e.getClickCount() == 1) {
+        
+            if (e.getButton() == MouseButton.SECONDARY) {
+                if (selectedTask != null) {
+                    selectedTask.toggleComplete(); 
+                    taskListView.refresh(); 
+                }
+            } 
+            else if (e.getClickCount() == 1) {
                 fetchData();
             }
-            taskListView.refresh(); // Refresh the ListView to show the change
         });
       
         // Mark As Complete Label
-        Label markAsComplete = new Label("* Double click to mark task as complete");
+        Label markAsComplete = new Label("* Right click to mark task as complete");
         markAsComplete.setStyle("-fx-font-size: 10;");
 
         // Add / Edit / Delete task label
