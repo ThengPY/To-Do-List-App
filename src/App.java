@@ -107,10 +107,6 @@ public class App extends Application {
         Button dueDateDescending = new Button(" Due Date\nDecending");
         Button priorityAscending = new Button("   Priority\nAscending");
         Button priorityDescending = new Button("   Priority\nAscending");
-        // dueDateDescending.setStyle("-fx-border-color: black; -fx-border-width: 1");
-        // dueDateAscending.setStyle("-fx-border-color: black; -fx-border-width: 1");
-        // priorityAscending.setStyle("-fx-border-color: black; -fx-border-width: 1");
-        // priorityDescending.setStyle("-fx-border-color: black; -fx-border-width: 1");
 
         // Buttons Layout (Add, Delete)
         HBox buttonLayout1 = new HBox(20, addButton, deleteButton);
