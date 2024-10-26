@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -27,28 +28,39 @@ public class App extends Application {
         primaryStage.setTitle("Todo List App");
         
         taskListView = new ListView<>();
-        taskListView.setMaxWidth(400);
+        taskListView.setMaxWidth(380);
         
-        // Mouse Click on taskListView Event
+        // Mouse Click On taskListView Event
         taskListView.setOnMouseClicked(e -> {
             Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
-        
-            if (e.getButton() == MouseButton.SECONDARY) {
-                if (selectedTask != null) {
+                if (e.getButton() == MouseButton.SECONDARY) {
+                    // Allow user to toggle complete when right clicked
                     selectedTask.toggleComplete(); 
-                    taskListView.refresh(); 
+                    taskListView.refresh();
+                    if (selectedTask.getCompletionStatus() == true) {
+                        if (selectedTask.getReccurence().equals("Daily")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                        }
+                        else if (selectedTask.getReccurence().equals("Weekly")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                        }
+                        else if (selectedTask.getReccurence().equals("Monthly")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                        }
+                        taskListView.refresh();
+                    }
+                } 
+                else if (e.getClickCount() == 1) {
+                    // Fetch data to input fields when task is selected
+                    fetchData();
                 }
-            } 
-            else if (e.getClickCount() == 1) {
-                fetchData();
-            }
         });
       
         // Mark As Complete Label
         Label markAsComplete = new Label("* Right click to mark task as complete");
         markAsComplete.setStyle("-fx-font-size: 10;");
 
-        // Add / Edit / Delete task label
+        // Add / Edit / Delete Task Label
         Label addDelete = new Label("=== Add / Edit / Delete Tasks ===");
         addDelete.setStyle("-fx-font-weight: bold");
 
@@ -75,11 +87,11 @@ public class App extends Application {
         HBox dueDateLayout = new HBox(5, dueDateLabel, dueDatePicker);
 
         // HBox for Recurring Task
-        Label recurringLabel = new Label("Recurrence\nInterval: ");
-        recurringLabel.setStyle("-fx-padding: 3 0 0 0;");
+        Label recurrenceLabel = new Label("Recurrence\n  Interval  :");
+        recurrenceLabel.setStyle("-fx-padding: 3 0 0 0;");
         recurrenceComboBox.getItems().addAll("Daily", "Weekly", "Monthly", "None");
         recurrenceComboBox.setPrefWidth(100);
-        HBox recurringLayout = new HBox(10, recurringLabel, recurrenceComboBox);
+        HBox recurringLayout = new HBox(10, recurrenceLabel, recurrenceComboBox);
 
         // HBox for Category
         Label categoryLabel = new Label("Category:");
@@ -97,20 +109,19 @@ public class App extends Application {
 
         // Add Task Button
         Button addButton = new Button("Add");
-        // buttonBorder(addButton);
         addButton.setOnAction(e -> addTask(
                 titleField.getText(),
                 descriptionField.getText(),
                 dueDatePicker.getValue(),
                 categoryComboBox.getValue(),
-                priorityComboBox.getValue()
+                priorityComboBox.getValue(),
+                recurrenceComboBox.getValue()
         )
         );
         taskListView.refresh();
 
         // Edit Task Button
         Button editButton = new Button("Edit");
-        // buttonBorder(editButton);
         editButton.setOnAction(e -> editTask());
 
         // Delete Task Button
@@ -122,15 +133,11 @@ public class App extends Application {
         Label sortBy = new Label("======== Sort Tasks ========");
         sortBy.setStyle("-fx-font-weight: bold");
         Button dueDateAscending = new Button(" Due Date\nAscending");
-        Button dueDateDescending = new Button(" Due Date\nDecending");
+        Button dueDateDescending = new Button(" Due Date\nDescending");
         Button priorityAscending = new Button("   Priority\nAscending");
         Button priorityDescending = new Button("   Priority\nDescending");
-        // buttonBorder(dueDateAscending);
-        // buttonBorder(dueDateDescending);
-        // buttonBorder(priorityAscending);
-        // buttonBorder(priorityDescending);
 
-        //Call Sorting methods
+        //Call sorting methods when sort buttons are clicked
         dueDateAscending.setOnAction(e -> {
             sortDuedateAscending();
             updateTaskListView();
@@ -158,15 +165,33 @@ public class App extends Application {
         HBox buttonLayout3 = new HBox(15, priorityAscending, priorityDescending);
         
         //Searching
-        Label searchLabel = new Label("== Search By Title or Description ==");
-        searchLabel.setStyle("-fx-font-weight: bold");
-        searchField.setPromptText("Enter a keyword");
-        Button searchButton = new Button("Go");
-        HBox searcHBox = new HBox(5, searchField, searchButton);
+        //Search Title
+        Label searchTitle = new Label("== Search By Title or Description ==");
 
-        // VBox for all inputs
-        VBox inputLayout = new VBox(10, markAsComplete, addDelete,  titleLayout, descriptionLayout, dueDateLayout, recurringLayout, categoryLayout, 
-        priorityLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchLabel, searcHBox);
+        //Search Field Layout
+        Label searchLabel = new Label("Search: ");
+        searchLabel.setStyle("-fx-padding: 5 0 0 0");
+        searchTitle.setStyle("-fx-font-weight: bold");
+        searchField.setPromptText("Enter a keyword");
+
+        //Search Button
+        Button searchButton = new Button("Search");
+
+        //Reset Button
+        Button resetButton = new Button("Reset");
+
+        //Search and Reset Button Hbox
+        HBox searchHBox = new HBox(10, searchButton, resetButton);
+        searchHBox.setAlignment(Pos.CENTER_RIGHT);
+        
+        //Search Button Event Handler
+        searchButton.setOnAction(e -> searchTasks());
+        //Reset Button Event Handler
+        resetButton.setOnAction(e -> resetTasksListView());
+
+        // VBox for all elements
+        VBox inputLayout = new VBox(10, markAsComplete, addDelete,  titleLayout, descriptionLayout, dueDateLayout,  categoryLayout, 
+        recurringLayout, priorityLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox);
         inputLayout.setPrefWidth(200);
 
         // Border Pane
@@ -181,23 +206,7 @@ public class App extends Application {
         // Adding a border around the layout
         layout.setStyle("-fx-border-color: gray; -fx-border-width: 2; -fx-padding: 10 20 10 10;"); // Added 20 pixels of padding to the right
 
-        // Deselect selected task when other area is clicked
-        // titleField.setOnMouseClicked(e -> {
-        //     taskListView.getSelectionModel().clearSelection();
-        // });
-        // descriptionField.setOnMouseClicked(e -> {
-        //     taskListView.getSelectionModel().clearSelection();
-        // });
-        // dueDatePicker.setOnMouseClicked(e -> {
-        //     taskListView.getSelectionModel().clearSelection();
-        // });
-        // categoryComboBox.setOnMouseClicked(e -> {
-        //     taskListView.getSelectionModel().clearSelection();
-        // });
-        // priorityComboBox.setOnMouseClicked(e -> {
-        //     taskListView.getSelectionModel().clearSelection();
-        // });
-
+        // Deselect task when other area / buttons are clicked
         layout.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
         });
@@ -218,14 +227,14 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 650, 580);
+        Scene scene = new Scene(layout, 640, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     //Tasks Functions
-    // Add Task to To Do List
-    private void addTask(String title, String description, LocalDate dueDate, String category, String priority) {
+    // Add Tasks to To Do List
+    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
         if (title == "") {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
             alert.showAndWait();
@@ -235,7 +244,7 @@ public class App extends Application {
                 taskNumber = 0;
             }
             taskNumber++;
-            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority);
+            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence);
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
@@ -250,6 +259,12 @@ public class App extends Application {
             taskListView.getItems().remove(selectedTask);
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
+            //Reassign Task Number After Deleting A Task
+            for (int i = 0; i < tasks.size(); i++) {
+                tasks.get(i).setTaskNumber(i+1);
+            }
+            taskNumber--; // to assign correct task number when add new task 
+            taskListView.refresh();
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
             alert.showAndWait();
@@ -275,6 +290,7 @@ public class App extends Application {
             selectedTask.setDueDate(dueDatePicker.getValue());
             selectedTask.setCategory(categoryComboBox.getValue());
             selectedTask.setPriority(priorityComboBox.getValue());
+            selectedTask.setRecurrence(recurrenceComboBox.getValue());
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
         }
@@ -295,11 +311,6 @@ public class App extends Application {
         recurrenceComboBox.setValue(null);
     }
 
-    //Add Button Border
-    // public void buttonBorder(Button button) {
-    //     button.setStyle("-fx-border-color: black; -fx-border-width: 1;  -fx-border-radius: 2;");
-    // }
-
     //Sorting
     //Due Date Ascending
     public void sortDuedateAscending() {
@@ -316,6 +327,11 @@ public class App extends Application {
                     // Swap task1 and task2
                     tasks.set(i, task2);
                     tasks.set(j, task1);
+
+                    //Swap Task Number
+                    int tempNum = task1.getTaskNumber();
+                    task1.setTaskNumber(task2.getTaskNumber());
+                    task2.setTaskNumber(tempNum);
                     continue;
                 } else if (task2.getDueDate() == null) {
                     // If dueDate1 is null, it should come after dueDate2
@@ -347,10 +363,15 @@ public class App extends Application {
                 if (task1.getDueDate() == null && task2.getDueDate() == null) {
                     continue; // Both are null, do nothing
                 } else if (task1.getDueDate() == null) {
-                    // If dueDate2 is null, it should come after dueDate1
+                    // If dueDate1 is null, it should come after dueDate2
                     // Swap task1 and task2
                     tasks.set(i, task2);
                     tasks.set(j, task1);
+
+                    //Swap Task Number
+                    int tempNum = task1.getTaskNumber();
+                    task1.setTaskNumber(task2.getTaskNumber());
+                    task2.setTaskNumber(tempNum);
                     continue;
                 } else if (task2.getDueDate() == null) {
                     // If dueDate1 is null, it should come after dueDate2
@@ -372,7 +393,7 @@ public class App extends Application {
     }
 
     //Priority Ascending
-    public int priorityLevelAscending(String priority) {
+    public int priorityLevelAscending(String priority) {   // Assign number based on priority level
         switch (priority) {
             case "Low":
                 return 1;
@@ -453,6 +474,42 @@ public class App extends Application {
         taskListView.getItems().addAll(tasks);
     }
 
+    //Search Tasks
+    private void searchTasks() {
+        String searchInput = searchField.getText();
+        // Clear the current list view  
+         taskListView.getItems().clear();
+
+        if (searchInput.isEmpty()) {
+        // If search input is empty, show all tasks
+            taskListView.getItems().addAll(tasks);
+        } 
+        else {
+        // Add tasks that match the search input
+        for (Task task : tasks) {
+            if ((task.getTitle() != null && task.getTitle().contains(searchInput)) ||
+                (task.getDescription() != null && task.getDescription().toLowerCase().contains(searchInput))) {
+                    taskListView.getItems().add(task);
+            }
+        }
+        // Tell user no task match with search input
+        if (taskListView.getItems().isEmpty()) {
+            taskListView.getItems().addAll(tasks);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION, "No Task Found!", ButtonType.OK);
+            alert.showAndWait();
+        }
+    }
+        searchField.clear();
+    }
+
+    //Reset Tasks List View to Original After Searching
+    private void resetTasksListView() {
+        taskListView.getItems().clear();
+        taskListView.getItems().addAll(tasks);
+        searchField.clear();
+    }
+
+    // Add
     public static void main(String[] args) {
         launch(args);
     }

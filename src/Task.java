@@ -5,15 +5,15 @@ public class Task {
     private String title;
     private String description;
     private LocalDate dueDate;
-    private boolean isComplete;
+    private boolean isComplete = false;
     private String category;
     private String priority;
-    private String recurring;
     private ArrayList<Task> dependencies; 
     private int taskNumber;
+    private  String recurrence;
 
     // Constructor
-    public Task(int taskNumber, String title, String description, LocalDate dueDate, String category, String priority) {
+    public Task(int taskNumber, String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
         this.taskNumber = taskNumber;
         this.title = title;
         this.description = description;
@@ -21,9 +21,11 @@ public class Task {
         this.isComplete = false;
         this.category = category;
         this.priority = priority;
+        this.recurrence = recurrence;
         this.dependencies = new ArrayList<>();
     }
 
+    // Getters and Setters
     // Get Task Number
     public int getTaskNumber() {
         return this.taskNumber;
@@ -64,6 +66,15 @@ public class Task {
         this.dueDate = newDueDate;
     }
 
+    // Get Completion Status
+    public boolean getCompletionStatus() {
+        return this.isComplete;
+    }
+
+    // Set Completion Status
+    // public void setCompletionStatus() {
+    //     this.isComplete
+    // }
     // Get Category
     public String getCategory() {
         return this.category;
@@ -84,9 +95,19 @@ public class Task {
         this.priority = newPriority;
     }
 
+    // Get Reccurrence 
+    public String getReccurence() {
+        return this.recurrence;
+    }
+
+    // Set Reccurrence
+    public void setRecurrence(String newRecurrence) {
+        this.recurrence = newRecurrence;
+    }
+
     // Toggle task as complete / pending
     public void toggleComplete() {
-        this.isComplete = !this.isComplete;
+        this.isComplete = ! this.isComplete;
     }
 
     //Dependencies
@@ -106,11 +127,12 @@ public class Task {
     @Override
     public String toString() {
         String displayTitle = isComplete ? "~~~~ " + title + " ~~~~  (COMPLETED)" : title;
-        return String.format("%d.  %s\n     Description:  %s\n     Due:  %s\n     Category:  %s\n     Priority Level:  %s",
+        return String.format("%d.  %s\n     Description:  %s\n     Due:  %s\n     Category:  %s\n     Recurrence:  %s\n     Priority Level:  %s",
                 taskNumber ,displayTitle, description != "" ? description : "None", dueDate != null ? dueDate.toString() : "None",
                 category != null ? category : "None",
-                priority != null ? priority : "None",
-                recurring != null ? recurring : "None");
+                recurrence != null ? recurrence : "None",
+                priority != null ? priority : "None"
+               );
     }
 }
 
