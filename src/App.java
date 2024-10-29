@@ -21,6 +21,8 @@ public class App extends Application {
     private ComboBox<String> priorityComboBox = new ComboBox<>();
     private ComboBox<String> categoryComboBox = new ComboBox<>();
     private ComboBox<String> recurrenceComboBox = new ComboBox<>();
+    private ComboBox<Integer> dependenciesComboBox = new ComboBox<>();
+    // private ArrayList<Task> dependencies; 
     private int taskNumber = 0;
 
     @Override
@@ -28,7 +30,7 @@ public class App extends Application {
         primaryStage.setTitle("Todo List App");
         
         taskListView = new ListView<>();
-        taskListView.setMaxWidth(380);
+        taskListView.setMaxWidth(450);
         
         // Mouse Click On taskListView Event
         taskListView.setOnMouseClicked(e -> {
@@ -38,7 +40,10 @@ public class App extends Application {
                     selectedTask.toggleComplete(); 
                     taskListView.refresh();
                     if (selectedTask.getCompletionStatus() == true) {
-                        if (selectedTask.getReccurence().equals("Daily")) {
+                        if (selectedTask.getDueDate() == null ) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                        }
+                        else if (selectedTask.getReccurence().equals("Daily")) {
                             addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
                         }
                         else if (selectedTask.getReccurence().equals("Weekly")) {
@@ -47,13 +52,16 @@ public class App extends Application {
                         else if (selectedTask.getReccurence().equals("Monthly")) {
                             addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
                         }
+                        
                         taskListView.refresh();
                     }
                 } 
                 else if (e.getClickCount() == 1) {
                     // Fetch data to input fields when task is selected
                     fetchData();
+             
                 }
+                
         });
       
         // Mark As Complete Label
@@ -106,6 +114,16 @@ public class App extends Application {
         priorityComboBox.getItems().addAll("Low", "Medium", "High");
         priorityComboBox.setPrefWidth(100);
         HBox priorityLayout = new HBox(10, priorityLabel, priorityComboBox);
+
+        // HBox for Task Dependencies
+        Label dependenciesLabel = new Label("Task Dependencies:");
+        dependenciesLabel.setStyle("-fx-padding: 3 0 0 0;");
+        dependenciesComboBox.setPrefWidth(80);
+        
+
+        // dependenciesComboBox.getItems().addAll(tasks.get(taskNumber));
+        // dependenciesComboBox.setStyle("-fx-padding: 5 0 5 0");
+        HBox dependenciesLayout = new HBox(5, dependenciesLabel, dependenciesComboBox);
 
         // Add Task Button
         Button addButton = new Button("Add");
@@ -187,17 +205,16 @@ public class App extends Application {
         //Search Button Event Handler
         searchButton.setOnAction(e -> searchTasks());
         //Reset Button Event Handler
-        resetButton.setOnAction(e -> resetTasksListView());
+        resetButton.setOnAction(e -> resetTaskListView());
 
         // VBox for all elements
         VBox inputLayout = new VBox(10, markAsComplete, addDelete,  titleLayout, descriptionLayout, dueDateLayout,  categoryLayout, 
-        recurringLayout, priorityLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox);
+        recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox);
         inputLayout.setPrefWidth(200);
 
         // Border Pane
         Label toDo = new Label("To-Do List");
         toDo.setStyle("-fx-font-size: 22; -fx-padding: 5 10 5 15; -fx-font-weight: bold");
-
         BorderPane layout = new BorderPane();
         layout.setCenter(taskListView);
         layout.setRight(inputLayout);
@@ -209,6 +226,7 @@ public class App extends Application {
         // Deselect task when other area / buttons are clicked
         layout.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
+            dependenciesComboBox.getItems().clear();
         });
         addButton.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
@@ -227,13 +245,13 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 640, 600);
+        Scene scene = new Scene(layout, 720, 650);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
 
     //Tasks Functions
-    // Add Tasks to To Do List
+    // Add Tasks to To-Do List
     private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
         if (title == "") {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
@@ -248,10 +266,15 @@ public class App extends Application {
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
+
+            // Handle dependencies
+            int selectedDependency = dependenciesComboBox.getValue();
+            newTask.addDependency(selectedDependency);
+
         }
     }
 
-    //Delete Selected Task From To Do List
+    //Delete Selected Task From To-Do List
     private void deleteTask() {
         Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
         if (selectedTask != null) {
@@ -271,7 +294,7 @@ public class App extends Application {
         }
     }
 
-    //Edit Tasks
+    // Fetch Data
     public void fetchData() {
         Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
         titleField.setText(selectedTask.getTitle());
@@ -279,8 +302,18 @@ public class App extends Application {
         dueDatePicker.setValue(selectedTask.getDueDate());
         categoryComboBox.setValue(selectedTask.getCategory());
         priorityComboBox.setValue(selectedTask.getPriority());
+        recurrenceComboBox.setValue(selectedTask.getReccurence());
+
+        // Fill in Dependencies Combo Box
+        dependenciesComboBox.getItems().clear();
+        for (Task task : tasks) {
+            if (task.getTaskNumber() != selectedTask.getTaskNumber()) {
+                dependenciesComboBox.getItems().add(task.getTaskNumber());
+            }
+        }
     }
 
+    //Edit Tasks
     public void editTask() {
         Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
         if (selectedTask != null) {
@@ -309,6 +342,7 @@ public class App extends Application {
         categoryComboBox.setValue(null);
         priorityComboBox.setValue(null);
         recurrenceComboBox.setValue(null);
+        dependenciesComboBox.setValue(null);
     }
 
     //Sorting
@@ -413,7 +447,7 @@ public class App extends Application {
              for (int j = i + 1; j < tasks.size(); j++) {
                 Task task1 = tasks.get(i);
                 Task task2 = tasks.get(j);
-                String priority1 = task1.getPriority();
+                String priority1 = task1.getPriority(); 
                 String priority2 = task2.getPriority();
                
                 if ((priorityLevelAscending(priority2) < priorityLevelAscending(priority1))) {
@@ -476,7 +510,7 @@ public class App extends Application {
 
     //Search Tasks
     private void searchTasks() {
-        String searchInput = searchField.getText();
+        String searchInput = searchField.getText().toLowerCase();
         // Clear the current list view  
          taskListView.getItems().clear();
 
@@ -487,7 +521,7 @@ public class App extends Application {
         else {
         // Add tasks that match the search input
         for (Task task : tasks) {
-            if ((task.getTitle() != null && task.getTitle().contains(searchInput)) ||
+            if ((task.getTitle() != null && task.getTitle().toLowerCase().contains(searchInput)) ||
                 (task.getDescription() != null && task.getDescription().toLowerCase().contains(searchInput))) {
                     taskListView.getItems().add(task);
             }
@@ -503,13 +537,17 @@ public class App extends Application {
     }
 
     //Reset Tasks List View to Original After Searching
-    private void resetTasksListView() {
+    private void resetTaskListView() {
         taskListView.getItems().clear();
         taskListView.getItems().addAll(tasks);
         searchField.clear();
     }
 
-    // Add
+    // Add Task Dependencies
+    // private void addTaskDependencies() {
+
+    // }
+
     public static void main(String[] args) {
         launch(args);
     }
