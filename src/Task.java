@@ -1,6 +1,7 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+
 public class Task {
     private String title;
     private String description;
@@ -8,7 +9,7 @@ public class Task {
     private boolean isComplete = false;
     private String category;
     private String priority;
-    private ArrayList<Task> dependencies; 
+    private ArrayList<Integer> dependencies; 
     private int taskNumber;
     private  String recurrence;
 
@@ -105,30 +106,37 @@ public class Task {
         this.recurrence = newRecurrence;
     }
 
+    //Dependencies
+    // Get Dependencies
+    public ArrayList<Integer> getDependencies() {
+        return this.dependencies;
+    }
+    // Add Dependencies
+    public void addDependency(int taskNumber) {
+        dependencies.add(taskNumber);
+    }
+
+    // public boolean canComplete() {
+    //     for (Task dependency : dependencies) {
+    //         if (!dependency.isComplete) {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
+    
     // Toggle task as complete / pending
     public void toggleComplete() {
         this.isComplete = ! this.isComplete;
     }
 
-    //Dependencies
-    public void addDependency(Task task) {
-        dependencies.add(task);
-    }
-
-    public boolean canComplete() {
-        for (Task dependency : dependencies) {
-            if (!dependency.isComplete) {
-                return false;
-            }
-        }
-        return true;
-    }
+    
 
     @Override
     public String toString() {
         String displayTitle = isComplete ? "~~~~ " + title + " ~~~~  (COMPLETED)" : title;
         return String.format("%d.  %s\n     Description:  %s\n     Due:  %s\n     Category:  %s\n     Recurrence:  %s\n     Priority Level:  %s",
-                taskNumber ,displayTitle, description != "" ? description : "None", dueDate != null ? dueDate.toString() : "None",
+                taskNumber , displayTitle, description != "" ? description : "None", dueDate != null ? dueDate.toString() : "None",
                 category != null ? category : "None",
                 recurrence != null ? recurrence : "None",
                 priority != null ? priority : "None"
