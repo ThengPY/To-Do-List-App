@@ -11,5 +11,6 @@
         "/Users/theng/javafx-sdk-23.0.1/src/javafx.swing/**/*.jar",
         "/Users/theng/javafx-sdk-23.0.1/src/javafx.web/**/*.jar",
         "/Users/theng/javafx-sdk-23.0.1/**/*.jar"
-    ]
+    ],
+    "java.debug.settings.onBuildFailureProceed": true
 }
