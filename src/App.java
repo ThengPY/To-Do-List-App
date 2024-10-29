@@ -40,7 +40,7 @@ public class App extends Application {
                     selectedTask.toggleComplete(); 
                     taskListView.refresh();
                     if (selectedTask.getCompletionStatus() == true) {
-                        if (selectedTask.getDueDate() == null ) {
+                        if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
                             addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
                         }
                         else if (selectedTask.getReccurence().equals("Daily")) {
@@ -120,7 +120,6 @@ public class App extends Application {
         dependenciesLabel.setStyle("-fx-padding: 3 0 0 0;");
         dependenciesComboBox.setPrefWidth(80);
         
-
         // dependenciesComboBox.getItems().addAll(tasks.get(taskNumber));
         // dependenciesComboBox.setStyle("-fx-padding: 5 0 5 0");
         HBox dependenciesLayout = new HBox(5, dependenciesLabel, dependenciesComboBox);
