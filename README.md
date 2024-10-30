@@ -1,6 +1,6 @@
 # To-Do List Application
 - FOP assignment
-- Built with Java, JavaFX, FXML and SQL.
+- Built with Java, JavaFX and SQL.
 - Allows users to manage their tasks efficiently by adding, editing, deleting, and sorting their tasks. 
 
 ## Features
@@ -8,7 +8,8 @@
 - **Edit Tasks**: Modify existing tasks.
 - **Delete Tasks**: Remove tasks that are no longer needed.
 - **Recurring Tasks**: Add tasks with daily, weekly, or monthly recurrence intervals. Automatically add a new task to the list when a recurring task is completed. 
-- **Sort Tasks**: Organize tasks by due date or priority for improved visibility.
+- **Sort Tasks**: Organize tasks by due date or priority level for improved visibility.
 - **Mark as Complete**: Right-click on a task to mark it as completed.
 - **Search Functionality**: Quickly find tasks by searching through the list.
+- **Task Dependencies**: Set dependencies between tasks.
 
