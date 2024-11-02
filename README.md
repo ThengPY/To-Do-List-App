@@ -1,6 +1,6 @@
 # To-Do List Application
 - FOP assignment
-- Built with Java, JavaFX and SQL.
+- Built with Java, JavaFX and SQLite.
 - Allows users to manage their tasks efficiently by adding, editing, deleting, and sorting their tasks. 
 
 ## Features
