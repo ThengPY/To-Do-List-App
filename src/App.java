@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+// import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -22,9 +23,9 @@ public class App extends Application {
     private ComboBox<String> categoryComboBox = new ComboBox<>();
     private ComboBox<String> recurrenceComboBox = new ComboBox<>();
     private ComboBox<Integer> dependenciesComboBox = new ComboBox<>();
-    // private ArrayList<Task> dependencies; 
     private int taskNumber = 0;
-
+    // private Connection connection;
+    
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
@@ -39,6 +40,7 @@ public class App extends Application {
                     // Allow user to toggle complete when right clicked
                     selectedTask.toggleComplete(); 
                     taskListView.refresh();
+                    // Check recurrence interval and automatically add new task when a recurring task is completed
                     if (selectedTask.getCompletionStatus() == true) {
                         if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
                             addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
@@ -59,13 +61,11 @@ public class App extends Application {
                 else if (e.getClickCount() == 1) {
                     // Fetch data to input fields when task is selected
                     fetchData();
-             
                 }
-                
         });
       
         // Mark As Complete Label
-        Label markAsComplete = new Label("* Right click to mark task as complete");
+        Label markAsComplete = new Label("* Right click on task to mark as complete");
         markAsComplete.setStyle("-fx-font-size: 10;");
 
         // Add / Edit / Delete Task Label
@@ -135,7 +135,6 @@ public class App extends Application {
                 recurrenceComboBox.getValue()
         )
         );
-        taskListView.refresh();
 
         // Edit Task Button
         Button editButton = new Button("Edit");
@@ -157,19 +156,15 @@ public class App extends Application {
         //Call sorting methods when sort buttons are clicked
         dueDateAscending.setOnAction(e -> {
             sortDuedateAscending();
-            updateTaskListView();
         });
         dueDateDescending.setOnAction(e -> {
             sortDuedateDescending();
-            updateTaskListView();
         });
         priorityAscending.setOnAction(e -> {
             sortPriorityAscending();
-            updateTaskListView();
         });
         priorityDescending.setOnAction(e -> {
             sortPriorityDescending();
-            updateTaskListView();
         });
         
         // Buttons Layout (Add, Edit, Delete)
@@ -183,7 +178,7 @@ public class App extends Application {
         
         //Searching
         //Search Title
-        Label searchTitle = new Label("== Search By Title or Description ==");
+        Label searchTitle = new Label("== Search by Title or Description ==");
 
         //Search Field Layout
         Label searchLabel = new Label("Search: ");
@@ -265,6 +260,7 @@ public class App extends Application {
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
+             taskListView.refresh();
 
             // Handle dependencies
             int selectedDependency = dependenciesComboBox.getValue();
@@ -330,7 +326,6 @@ public class App extends Application {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
             alert.showAndWait();
         }
-
     }
 
      // Clear input fields after adding new task
@@ -356,7 +351,7 @@ public class App extends Application {
                 if (task1.getDueDate() == null && task2.getDueDate() == null) {
                     continue; // Both are null, do nothing
                 } else if (task1.getDueDate() == null) {
-                    // If dueDate2 is null, it should come after dueDate1
+                    // If dueDate1 is null, it should come after dueDate2
                     // Swap task1 and task2
                     tasks.set(i, task2);
                     tasks.set(j, task1);
@@ -367,15 +362,14 @@ public class App extends Application {
                     task2.setTaskNumber(tempNum);
                     continue;
                 } else if (task2.getDueDate() == null) {
-                    // If dueDate1 is null, it should come after dueDate2
+                    // If dueDate2 is null, it should come after dueDate1
                     continue;
                 }
     
                 if (task2.getDueDate().isBefore(task1.getDueDate())) {
                     //Swap Tasks
-                    Task temp = tasks.get(i);
                     tasks.set(i, task2);
-                    tasks.set(j, temp);
+                    tasks.set(j, task1);
 
                     //Swap Task Number
                     int tempNum = task1.getTaskNumber();
@@ -384,6 +378,7 @@ public class App extends Application {
                 }
             }
         }
+        updateTaskListView();
     }
 
     //Due Date Descending
@@ -407,7 +402,7 @@ public class App extends Application {
                     task2.setTaskNumber(tempNum);
                     continue;
                 } else if (task2.getDueDate() == null) {
-                    // If dueDate1 is null, it should come after dueDate2
+                    // If dueDate2 is null, it should come after dueDate1
                     continue;
                 }
 
@@ -423,6 +418,7 @@ public class App extends Application {
                 }
             }
         }
+        updateTaskListView();
     }
 
     //Priority Ascending
@@ -461,6 +457,7 @@ public class App extends Application {
                 }
       }
     }
+     updateTaskListView();
 }
     
 
@@ -496,9 +493,10 @@ public class App extends Application {
                    int tempNum = task1.getTaskNumber();
                    task1.setTaskNumber(task2.getTaskNumber());
                    task2.setTaskNumber(tempNum);
-               }
-     }
-   }
+                }
+            }
+        }
+        updateTaskListView();
     }
 
     // Update Tasks List After Sorting
@@ -546,6 +544,12 @@ public class App extends Application {
     // private void addTaskDependencies() {
 
     // }
+
+    // Connect with database
+    // static Connection conn;
+    // ResultSet rs;
+    // int row, col;
+
 
     public static void main(String[] args) {
         launch(args);

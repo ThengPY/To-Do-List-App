@@ -1,16 +1,19 @@
 {
-    "java.project.sourcePaths": ["src"],
+    "java.project.sourcePaths": [
+        "lib",
+        "src"
+    ],
     "java.project.outputPath": "bin",
     "java.project.referencedLibraries": [
-        "lib/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.base/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.controls/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.fxml/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.graphics/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.media/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.swing/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/src/javafx.web/**/*.jar",
-        "/Users/theng/javafx-sdk-23.0.1/**/*.jar"
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.swing.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.controls.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.graphics.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.base.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx-swt.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.fxml.jar",
+        "/Users/theng/To-Do List App/lib/sqlite-jdbc-3.47.0.0.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.web.jar",
+        "/Users/theng/javafx-sdk-23.0.1/lib/javafx.media.jar"
     ],
     "java.debug.settings.onBuildFailureProceed": true
 }

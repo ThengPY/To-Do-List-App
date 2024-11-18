@@ -73,9 +73,10 @@ public class Task {
     }
 
     // Set Completion Status
-    // public void setCompletionStatus() {
-    //     this.isComplete
-    // }
+    public void setCompletionStatus() {
+        this.isComplete = true;
+    }
+
     // Get Category
     public String getCategory() {
         return this.category;
