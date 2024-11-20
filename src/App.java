@@ -12,6 +12,8 @@ import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
+// import javax.swing.plaf.basic.BasicScrollPaneUI.VSBChangeListener;
+
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
     private ListView<Task> taskListView;
@@ -201,9 +203,20 @@ public class App extends Application {
         //Reset Button Event Handler
         resetButton.setOnAction(e -> resetTaskListView());
 
+        //Analytics Dashboard
+        Label analyticsLabel = new Label("===== Analytics Dashboard =====");
+        analyticsLabel.setStyle("-fx-font-weight: bold");
+        Label totalTasksLabel = new Label("- Total tasks: ");
+        Label completedTasksLabel = new Label("- Completed: ");
+        Label pendingTasksLabel = new Label("- Pending: ");
+        Label completionRateLabel = new Label("- Completion Rate: ");
+        Label taskCategoriesLabel = new Label("- Task Categories: ");
+        VBox analyticsDashboardVBox = new VBox(2, analyticsLabel, totalTasksLabel,
+        completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
         // VBox for all elements
         VBox inputLayout = new VBox(10, markAsComplete, addDelete,  titleLayout, descriptionLayout, dueDateLayout,  categoryLayout, 
-        recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox);
+        recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox, analyticsDashboardVBox);
         inputLayout.setPrefWidth(200);
 
         // Border Pane
@@ -239,7 +252,7 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 720, 650);
+        Scene scene = new Scene(layout, 720, 760);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -265,7 +278,6 @@ public class App extends Application {
             // Handle dependencies
             int selectedDependency = dependenciesComboBox.getValue();
             newTask.addDependency(selectedDependency);
-
         }
     }
 
