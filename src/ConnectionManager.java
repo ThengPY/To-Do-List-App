@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import javafx.scene.control.ListView;
 
 public class ConnectionManager {
+    //change depending on path
     private static String url = "jdbc:sqlite:/Users/theng/To-Do List App/src/tasks.db";
 
     public static void main(String[] args) {
@@ -71,18 +72,17 @@ public class ConnectionManager {
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 PreparedStatement preparedStatement = con.prepareStatement(updateValue);
-                preparedStatement.setInt(7, task.getTaskNumber());
                 preparedStatement.setString(1, task.getTitle());
                 preparedStatement.setString(2, task.getDescription());
-                long dueDateAsInt = task.getDueDate().atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-                preparedStatement.setLong(3, dueDateAsInt);
+                preparedStatement.setString(3, task.getDueDate().toString());
                 preparedStatement.setString(4, task.getCategory());
                 preparedStatement.setString(5, task.getPriority());
                 preparedStatement.setString(6, task.getReccurence());
-
+                preparedStatement.setInt(7, task.getTaskNumber());
+    
                 // Debugging statement to verify data
-                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + dueDateAsInt + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
-
+                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate().toString() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+    
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -132,8 +132,8 @@ public class ConnectionManager {
                 ResultSet resultSet = statement.executeQuery(readValue);
 
                 while (resultSet.next()) {
-                    Instant instant = Instant.ofEpochSecond(resultSet.getInt("dueDate"));
-                    LocalDate dueDate = instant.atZone(ZoneOffset.UTC).toLocalDate();
+                    // Parse the dueDate as a LocalDate
+                    LocalDate dueDate = LocalDate.parse(resultSet.getString("dueDate"));
                     Task newTask = new Task(
                             resultSet.getInt("taskNumber"),
                             resultSet.getString("title"),
