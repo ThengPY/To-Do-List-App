@@ -8,12 +8,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
-// import java.sql.*;
-import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
-
-// import javax.swing.plaf.basic.BasicScrollPaneUI.VSBChangeListener;
 
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
@@ -27,12 +23,11 @@ public class App extends Application {
     private ComboBox<String> recurrenceComboBox = new ComboBox<>();
     private ComboBox<Integer> dependenciesComboBox = new ComboBox<>();
     private int taskNumber = 0;
-    // private Connection connection;
     
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
-        
+
         taskListView = new ListView<>();
         taskListView.setMaxWidth(450);
         
@@ -264,11 +259,10 @@ public class App extends Application {
     //Tasks Functions
     // Add Tasks to To-Do List
     private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
-        if (title == "") {
+        if (title.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
             alert.showAndWait();
-        }
-        else {
+        } else {
             if (taskListView.getItems().isEmpty()) {
                 taskNumber = 0;
             }
@@ -277,13 +271,11 @@ public class App extends Application {
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
-             taskListView.refresh();
-            //add to database
+            taskListView.refresh();
             ConnectionManager.addTask(newTask);
 
-            // Handle dependencies
-            int selectedDependency = dependenciesComboBox.getValue();
-            newTask.addDependency(selectedDependency);
+            // Debugging statement to verify data
+            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
         }
     }
 

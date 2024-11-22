@@ -1,24 +1,17 @@
-import javafx.scene.control.ListView;
-
-import javax.xml.transform.Result;
 import java.sql.*;
-
-import java.text.DateFormat;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import javafx.scene.control.ListView;
 
 public class ConnectionManager {
-    //change depending on path
-    private static String url = "jdbc:sqlite:C:/Users/keste/IdeaProjects/To-Do-List-App/src/tasks.db";
+    private static String url = "jdbc:sqlite:/Users/theng/To-Do List App/src/tasks.db";
 
-    //conection test
     public static void main(String[] args) {
         ConnectionManager cm = new ConnectionManager();
         cm.connect();
     }
-
 
     public void connect() {
         try (Connection con = DriverManager.getConnection(url)) {
@@ -30,14 +23,7 @@ public class ConnectionManager {
         }
     }
 
-        /*temporarily drop
-        String dropTable = "DROP TABLE IF EXISTS tasklist";
-        temporarily drop
-        statement.executeUpdate(dropTable);*/
-
     public static void addTask(Task task) {
-        //queries
-
         String createTable = "CREATE TABLE IF NOT EXISTS tasklist(" +
                 "taskNumber INTEGER NOT NULL," +
                 "title TEXT NOT NULL," +
@@ -50,7 +36,6 @@ public class ConnectionManager {
         String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence)" +
                 "VALUES (?,?,?,?,?,?,?)";
 
-
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 Statement statement = con.createStatement();
@@ -59,24 +44,23 @@ public class ConnectionManager {
                 PreparedStatement preparedStatement = con.prepareStatement(insertValue);
                 preparedStatement.setInt(1, task.getTaskNumber());
                 preparedStatement.setString(2, task.getTitle());
-                preparedStatement.setString(3, task.getDescription());
-                //date changed to unix time
-                long dueDateAsInt = task.getDueDate().atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-                preparedStatement.setLong(4, dueDateAsInt);
-                preparedStatement.setString(5, task.getCategory());
-                preparedStatement.setString(6, task.getPriority());
-                preparedStatement.setString(7, task.getReccurence());
+                preparedStatement.setString(3, task.getDescription() != "" ? task.getDescription() : "None");
+                preparedStatement.setString(4, task.getDueDate() != null ? task.getDueDate().toString() : "None");
+                preparedStatement.setString(5, task.getCategory() != null ? task.getCategory() : "None");
+                preparedStatement.setString(6, task.getPriority() != null ? task.getPriority() : "None");
+                preparedStatement.setString(7, task.getReccurence() != null ? task.getReccurence() : "None");
+
+                // Debugging statement to verify data
+                System.out.println("Inserting Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
 
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
     }
 
     public static void editTask(Task task) {
-        //queries
         String updateValue = "UPDATE tasklist SET title=?," +
                 "description=?," +
                 "dueDate=?," +
@@ -90,12 +74,15 @@ public class ConnectionManager {
                 preparedStatement.setInt(7, task.getTaskNumber());
                 preparedStatement.setString(1, task.getTitle());
                 preparedStatement.setString(2, task.getDescription());
-                //date changed to unix time
                 long dueDateAsInt = task.getDueDate().atStartOfDay(ZoneOffset.UTC).toEpochSecond();
                 preparedStatement.setLong(3, dueDateAsInt);
                 preparedStatement.setString(4, task.getCategory());
                 preparedStatement.setString(5, task.getPriority());
                 preparedStatement.setString(6, task.getReccurence());
+
+                // Debugging statement to verify data
+                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + dueDateAsInt + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -104,13 +91,15 @@ public class ConnectionManager {
     }
 
     public static void deleteTask(Task task) {
-        ConnectionManager cm = new ConnectionManager();
-        //query
         String deleteRow = "DELETE FROM tasklist WHERE taskNumber=?";
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 PreparedStatement preparedStatement = con.prepareStatement(deleteRow);
                 preparedStatement.setInt(1, task.getTaskNumber());
+
+                // Debugging statement to verify data
+                System.out.println("Deleting Task: " + task.getTitle() + ", " + task.getDescription());
+
                 preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
@@ -119,10 +108,7 @@ public class ConnectionManager {
     }
 
     public static void updateTaskNumber(ArrayList<Task> tasks) {
-        ConnectionManager cm = new ConnectionManager();
-        //query
         String updateTaskNumber = "UPDATE tasklist SET taskNumber = ? WHERE title=?";
-        //String orderByTaskNumber = "SELECT * FROM tasklist ORDER BY taskNumber ASC";
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 PreparedStatement preparedStatement = con.prepareStatement(updateTaskNumber);
@@ -131,67 +117,40 @@ public class ConnectionManager {
                     preparedStatement.setString(2, tasks.get(i).getTitle());
                     preparedStatement.executeUpdate();
                 }
-                //Statement statement = con.createStatement();
-                //statement.executeUpdate(orderByTaskNumber);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-    //not done yet
+
     public static void loadTasks(ArrayList<Task> tasks, ListView<Task> taskListView) {
-        //queries
-        String ReadValue = "SELECT * FROM tasklist ORDER BY taskNumber ASC";
+        String readValue = "SELECT * FROM tasklist ORDER BY taskNumber ASC";
 
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 Statement statement = con.createStatement();
-                ResultSet resultSet = statement.executeQuery(ReadValue);
+                ResultSet resultSet = statement.executeQuery(readValue);
 
-                while(resultSet.next()) {
-                    //change unix to LocalDate
+                while (resultSet.next()) {
                     Instant instant = Instant.ofEpochSecond(resultSet.getInt("dueDate"));
                     LocalDate dueDate = instant.atZone(ZoneOffset.UTC).toLocalDate();
                     Task newTask = new Task(
-                                        resultSet.getInt("taskNumber"),
-                                        resultSet.getString("title"),
-                                        resultSet.getString("description"),
-                                        //converted unix time
-                                        dueDate,
-                                        resultSet.getString("category"),
-                                        resultSet.getString("priority"),
-                                        resultSet.getString("recurrence"));
+                            resultSet.getInt("taskNumber"),
+                            resultSet.getString("title"),
+                            resultSet.getString("description"),
+                            dueDate,
+                            resultSet.getString("category"),
+                            resultSet.getString("priority"),
+                            resultSet.getString("recurrence"));
                     tasks.add(newTask);
                     taskListView.getItems().add(newTask);
+
+                    // Debugging statement to verify data
+                    System.out.println("Loaded Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
                 }
-                /*
-                taskNumber++;
-                Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence);
-                tasks.add(newTask);
-                taskListView.getItems().add(newTask);
-                clearInputFields();
-                taskListView.refresh();
-
-                 */
-
-                /*
-                PreparedStatement preparedStatement = con.prepareStatement(insertValue);
-                preparedStatement.setInt(1, task.getTaskNumber());
-                preparedStatement.setString(2, task.getTitle());
-                preparedStatement.setString(3, task.getDescription());
-                //date changed to unix time
-                long dueDateAsInt = task.getDueDate().atStartOfDay(ZoneOffset.UTC).toEpochSecond();
-                preparedStatement.setLong(4, dueDateAsInt);
-                preparedStatement.setString(5, task.getCategory());
-                preparedStatement.setString(6, task.getPriority());
-                preparedStatement.setString(7, task.getReccurence());
-                */
-
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
-
 }
-//load data
