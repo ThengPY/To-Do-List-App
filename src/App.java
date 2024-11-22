@@ -309,7 +309,7 @@ public class App extends Application {
             taskNumber--; // to assign correct task number when add new task
             taskListView.refresh();
             //delete from database and update task number
-            ConnectionManager.addTask(selectedTask);
+            ConnectionManager.deleteTask(selectedTask);
             ConnectionManager.updateTaskNumber(tasks);
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
