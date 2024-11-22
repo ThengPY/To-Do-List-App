@@ -1,7 +1,7 @@
 import java.sql.*;
 import java.time.LocalDate;
-import java.time.Instant;
-import java.time.ZoneOffset;
+// import java.time.Instant;
+// import java.time.ZoneOffset;
 import java.util.ArrayList;
 import javafx.scene.control.ListView;
 
@@ -125,15 +125,22 @@ public class ConnectionManager {
 
     public static void loadTasks(ArrayList<Task> tasks, ListView<Task> taskListView) {
         String readValue = "SELECT * FROM tasklist ORDER BY taskNumber ASC";
-
+    
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 Statement statement = con.createStatement();
                 ResultSet resultSet = statement.executeQuery(readValue);
-
+    
                 while (resultSet.next()) {
-                    // Parse the dueDate as a LocalDate
-                    LocalDate dueDate = LocalDate.parse(resultSet.getString("dueDate"));
+                    // Get the dueDate as a string
+                    String dueDateStr = resultSet.getString("dueDate");
+                    LocalDate dueDate = null;
+    
+                    // Check if the dueDate is not "None" before parsing
+                    if (!"None".equals(dueDateStr)) {
+                        dueDate = LocalDate.parse(dueDateStr);
+                    }
+    
                     Task newTask = new Task(
                             resultSet.getInt("taskNumber"),
                             resultSet.getString("title"),
@@ -144,7 +151,7 @@ public class ConnectionManager {
                             resultSet.getString("recurrence"));
                     tasks.add(newTask);
                     taskListView.getItems().add(newTask);
-
+    
                     // Debugging statement to verify data
                     System.out.println("Loaded Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
                 }
