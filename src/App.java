@@ -274,6 +274,9 @@ public class App extends Application {
             taskListView.getItems().add(newTask);
             clearInputFields();
              taskListView.refresh();
+            //add to database
+            ConnectionManager connectionManager = new ConnectionManager();
+            connectionManager.addTask(newTask);
 
             // Handle dependencies
             int selectedDependency = dependenciesComboBox.getValue();
@@ -295,6 +298,10 @@ public class App extends Application {
             }
             taskNumber--; // to assign correct task number when add new task 
             taskListView.refresh();
+            //delete from database and update task number
+            ConnectionManager connectionManager = new ConnectionManager();
+            connectionManager.deleteTask(selectedTask);
+            connectionManager.updateTaskNumber(tasks);
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
             alert.showAndWait();
@@ -333,6 +340,9 @@ public class App extends Application {
             selectedTask.setRecurrence(recurrenceComboBox.getValue());
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
+            //update values in database
+            ConnectionManager connectionManager = new ConnectionManager();
+            connectionManager.editTask(selectedTask);
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
@@ -390,6 +400,9 @@ public class App extends Application {
                 }
             }
         }
+        //update task number
+        ConnectionManager connectionManager = new ConnectionManager();
+        connectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -430,6 +443,9 @@ public class App extends Application {
                 }
             }
         }
+        //update task number
+        ConnectionManager connectionManager = new ConnectionManager();
+        connectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -469,7 +485,10 @@ public class App extends Application {
                 }
       }
     }
-     updateTaskListView();
+    //update task number
+    ConnectionManager connectionManager = new ConnectionManager();
+    connectionManager.updateTaskNumber(tasks);
+    updateTaskListView();
 }
     
 
@@ -508,6 +527,9 @@ public class App extends Application {
                 }
             }
         }
+        //update task number
+        ConnectionManager connectionManager = new ConnectionManager();
+        connectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
