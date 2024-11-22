@@ -9,6 +9,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 // import java.sql.*;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -255,6 +256,9 @@ public class App extends Application {
         Scene scene = new Scene(layout, 720, 760);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        //check database for existing tasks
+        loadTasks();
     }
 
     //Tasks Functions
@@ -275,13 +279,19 @@ public class App extends Application {
             clearInputFields();
              taskListView.refresh();
             //add to database
-            ConnectionManager connectionManager = new ConnectionManager();
-            connectionManager.addTask(newTask);
+            ConnectionManager.addTask(newTask);
 
             // Handle dependencies
             int selectedDependency = dependenciesComboBox.getValue();
             newTask.addDependency(selectedDependency);
         }
+    }
+
+    //Startup tasks
+    public void loadTasks(){
+        ConnectionManager.loadTasks(tasks,taskListView);
+        taskNumber=tasks.size();
+        taskListView.refresh();
     }
 
     //Delete Selected Task From To-Do List
@@ -296,12 +306,11 @@ public class App extends Application {
             for (int i = 0; i < tasks.size(); i++) {
                 tasks.get(i).setTaskNumber(i+1);
             }
-            taskNumber--; // to assign correct task number when add new task 
+            taskNumber--; // to assign correct task number when add new task
             taskListView.refresh();
             //delete from database and update task number
-            ConnectionManager connectionManager = new ConnectionManager();
-            connectionManager.deleteTask(selectedTask);
-            connectionManager.updateTaskNumber(tasks);
+            ConnectionManager.addTask(selectedTask);
+            ConnectionManager.updateTaskNumber(tasks);
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
             alert.showAndWait();
@@ -341,14 +350,14 @@ public class App extends Application {
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
             //update values in database
-            ConnectionManager connectionManager = new ConnectionManager();
-            connectionManager.editTask(selectedTask);
+            ConnectionManager.editTask(selectedTask);
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
             alert.showAndWait();
         }
     }
+
 
      // Clear input fields after adding new task
      public void clearInputFields() {
@@ -401,8 +410,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager connectionManager = new ConnectionManager();
-        connectionManager.updateTaskNumber(tasks);
+        ConnectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -444,8 +452,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager connectionManager = new ConnectionManager();
-        connectionManager.updateTaskNumber(tasks);
+        ConnectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -486,8 +493,7 @@ public class App extends Application {
       }
     }
     //update task number
-    ConnectionManager connectionManager = new ConnectionManager();
-    connectionManager.updateTaskNumber(tasks);
+    ConnectionManager.updateTaskNumber(tasks);
     updateTaskListView();
 }
     
@@ -528,8 +534,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager connectionManager = new ConnectionManager();
-        connectionManager.updateTaskNumber(tasks);
+        ConnectionManager.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
