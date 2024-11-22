@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "ConnectionManager",
+            "request": "launch",
+            "mainClass": "ConnectionManager",
+            "projectName": "To-Do List App_ea969b3d"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
@@ -16,7 +23,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "To-Do List App_ea969b3d",
-            "vmArgs": "--module-path /Users/theng/javafx-sdk-23.0.1/lib --add-modules javafx.controls,javafx.fxml", // Update with your JavaFX SDK path
+            "vmArgs": "--module-path /Users/theng/javafx-sdk-23.0.1/lib --add-modules javafx.controls,javafx.fxml" // Update with your JavaFX SDK path
         }
     ]
 }
