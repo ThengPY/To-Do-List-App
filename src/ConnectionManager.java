@@ -62,34 +62,55 @@ public class ConnectionManager {
     }
 
     public static void editTask(Task task) {
-        String updateValue = "UPDATE tasklist SET title=?," +
-                "description=?," +
-                "dueDate=?," +
-                "category=?," +
-                "priority=?," +
-                "recurrence=? " +
-                "WHERE taskNumber=?";
+        String updateValue = "UPDATE tasklist SET title=?, description=?, dueDate=?, category=?, priority=?, recurrence=? WHERE taskNumber=?";
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 PreparedStatement preparedStatement = con.prepareStatement(updateValue);
                 preparedStatement.setString(1, task.getTitle());
                 preparedStatement.setString(2, task.getDescription());
-                preparedStatement.setString(3, task.getDueDate().toString());
-                preparedStatement.setString(4, task.getCategory());
-                preparedStatement.setString(5, task.getPriority());
-                preparedStatement.setString(6, task.getReccurence());
+                
+                // Check if dueDate is null and set it accordingly
+                if (task.getDueDate() != null) {
+                    preparedStatement.setString(3, task.getDueDate().toString());
+                } else {
+                    preparedStatement.setString(3, "None");
+                }
+                
+                if (task.getCategory() != null) {
+                    preparedStatement.setString(4, task.getCategory());
+                } else {
+                    preparedStatement.setString(4, "None");
+                }
+                
+                if (task.getPriority() != null) {
+                    preparedStatement.setString(5, task.getPriority());
+                } else {
+                    preparedStatement.setString(5, "None");
+                }
+                
+                if (task.getReccurence() != null) {
+                    preparedStatement.setString(6, task.getReccurence());
+                } else {
+                    preparedStatement.setString(6, "None");
+                }
+
                 preparedStatement.setInt(7, task.getTaskNumber());
     
                 // Debugging statement to verify data
-                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate().toString() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + (task.getDueDate() != null ? task.getDueDate().toString() : "null") + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
     
-                preparedStatement.executeUpdate();
+                int rowsAffected = preparedStatement.executeUpdate();
+                if (rowsAffected > 0) {
+                    System.out.println("Task updated successfully: " + task.getTitle());
+                } else {
+                    System.out.println("Failed to update task: " + task.getTitle());
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            System.out.println("Failed to update task in the database: " + e.getMessage());
         }
     }
-
     public static void deleteTask(Task task) {
         String deleteRow = "DELETE FROM tasklist WHERE taskNumber=?";
         try (Connection con = DriverManager.getConnection(url)) {
