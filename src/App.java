@@ -43,16 +43,16 @@ public class App extends Application {
                     // Check recurrence interval and automatically add new task when a recurring task is completed
                     if (selectedTask.getCompletionStatus() == true) {
                         if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Daily")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Weekly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Monthly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         
                         taskListView.refresh();
@@ -124,6 +124,11 @@ public class App extends Application {
         // dependenciesComboBox.setStyle("-fx-padding: 5 0 5 0");
         HBox dependenciesLayout = new HBox(5, dependenciesLabel, dependenciesComboBox);
 
+        // Set the event handler to populate the combo box when it is shown
+        dependenciesComboBox.setOnShowing(event -> {
+            populateDependenciesComboBox(); // Populate the combo box with current tasks
+        });
+
         // Add Task Button
         Button addButton = new Button("Add");
         addButton.setOnAction(e -> addTask(
@@ -132,7 +137,8 @@ public class App extends Application {
                 dueDatePicker.getValue(),
                 categoryComboBox.getValue(),
                 priorityComboBox.getValue(),
-                recurrenceComboBox.getValue()
+                recurrenceComboBox.getValue(),
+                dependenciesComboBox.getValue()
         )
         );
 
@@ -260,7 +266,7 @@ public class App extends Application {
 
     //Tasks Functions
     // Add Tasks to To-Do List
-    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
+    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependencies) {
         if (title.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
             alert.showAndWait();
@@ -269,7 +275,7 @@ public class App extends Application {
                 taskNumber = 0;
             }
             taskNumber++;
-            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence);
+            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence,dependencies,tasks);
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
@@ -277,7 +283,7 @@ public class App extends Application {
             ConnectionManager.addTask(newTask);
 
             // Debugging statement to verify data
-            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
+            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence()+ ", " + newTask.getDependencies().toString());
         }
     }
 
@@ -321,12 +327,14 @@ public class App extends Application {
         priorityComboBox.setValue(selectedTask.getPriority());
         recurrenceComboBox.setValue(selectedTask.getReccurence());
 
-        // Fill in Dependencies Combo Box
-        dependenciesComboBox.getItems().clear();
+       populateDependenciesComboBox();
+    }
+
+    //Fill in Dependencies Combo Box
+    private void populateDependenciesComboBox() {
+        dependenciesComboBox.getItems().clear(); // Clear existing items
         for (Task task : tasks) {
-            if (task.getTaskNumber() != selectedTask.getTaskNumber()) {
-                dependenciesComboBox.getItems().add(task.getTitle());
-            }
+            dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
         }
     }
 

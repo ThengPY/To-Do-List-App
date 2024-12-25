@@ -35,8 +35,15 @@ public class ConnectionManager {
                 "recurrence TEXT NOT NULL," +
                 "dependency TEXT)";
 
-        String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence)" +
-                "VALUES (?,?,?,?,?,?,?)";
+        String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence,dependency)" +
+                "VALUES (?,?,?,?,?,?,?,?)";
+
+        StringBuilder stringDependentTask= new StringBuilder();
+        //string dependant task title name to (a,b,c,)
+        for(Task taskDependentTasks:task.getDependencies()){
+            stringDependentTask.append(taskDependentTasks.getTitle());
+            stringDependentTask.append(",");
+        }
 
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
@@ -51,9 +58,10 @@ public class ConnectionManager {
                 preparedStatement.setString(5, task.getCategory() != null ? task.getCategory() : "None");
                 preparedStatement.setString(6, task.getPriority() != null ? task.getPriority() : "None");
                 preparedStatement.setString(7, task.getReccurence() != null ? task.getReccurence() : "None");
+                preparedStatement.setString(8, stringDependentTask.toString());
 
                 // Debugging statement to verify data
-                System.out.println("Inserting Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+                System.out.println("Inserting Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence() + ", " + stringDependentTask.toString());
 
                 preparedStatement.executeUpdate();
             }
@@ -90,7 +98,7 @@ public class ConnectionManager {
                 preparedStatement.setInt(8, task.getTaskNumber());
     
                 // Debugging statement to verify data
-                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate().toString() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence()+", "+ stringDependentTask.toString());
+                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate().toString() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence()+", ["+ stringDependentTask.toString()+"]");
     
                 preparedStatement.executeUpdate();
             }
@@ -150,7 +158,6 @@ public class ConnectionManager {
                     if (!"None".equals(dueDateStr)) {
                         dueDate = LocalDate.parse(dueDateStr);
                     }
-
     
                     Task newTask = new Task(
                             resultSet.getInt("taskNumber"),
@@ -159,12 +166,34 @@ public class ConnectionManager {
                             dueDate,
                             resultSet.getString("category"),
                             resultSet.getString("priority"),
-                            resultSet.getString("recurrence"));
+                            resultSet.getString("recurrence")
+                    );
                     tasks.add(newTask);
                     taskListView.getItems().add(newTask);
     
                     // Debugging statement to verify data
                     System.out.println("Loaded Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
+                }
+
+                //Read dependency column
+                resultSet = statement.executeQuery(readValue);
+                int i=0;
+                while (resultSet.next()) {
+                    String title =resultSet.getString("title");
+                    String dependantTaskTitle =resultSet.getString("dependency");
+                    if(dependantTaskTitle!=null){
+
+                        String[] splitDependantTaskTitle = dependantTaskTitle.split(",");
+                        for (String s : splitDependantTaskTitle) {
+                            for (Task task : tasks) {
+                                if (task.getTitle().equals(s)) {
+                                    tasks.get(i).addDependency(task.getTitle(),tasks);
+                                }
+                            }
+                        }
+                    }
+                    i++;
+
                 }
             }
         } catch (SQLException e) {
