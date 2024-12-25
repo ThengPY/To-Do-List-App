@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
@@ -21,9 +23,9 @@ public class App extends Application {
     private ComboBox<String> priorityComboBox = new ComboBox<>();
     private ComboBox<String> categoryComboBox = new ComboBox<>();
     private ComboBox<String> recurrenceComboBox = new ComboBox<>();
-    private ComboBox<Integer> dependenciesComboBox = new ComboBox<>();
+    private ComboBox<String> dependenciesComboBox = new ComboBox<>();
     private int taskNumber = 0;
-    
+    private HashMap<String, List<String>> graph;
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
@@ -323,7 +325,7 @@ public class App extends Application {
         dependenciesComboBox.getItems().clear();
         for (Task task : tasks) {
             if (task.getTaskNumber() != selectedTask.getTaskNumber()) {
-                dependenciesComboBox.getItems().add(task.getTaskNumber());
+                dependenciesComboBox.getItems().add(task.getTitle());
             }
         }
     }
@@ -339,6 +341,7 @@ public class App extends Application {
             selectedTask.setCategory(categoryComboBox.getValue());
             selectedTask.setPriority(priorityComboBox.getValue());
             selectedTask.setRecurrence(recurrenceComboBox.getValue());
+            selectedTask.addDependency(dependenciesComboBox.getValue(),tasks);
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
             //update values in database

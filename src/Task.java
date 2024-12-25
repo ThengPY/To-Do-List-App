@@ -9,7 +9,7 @@ public class Task {
     private boolean isComplete = false;
     private String category;
     private String priority;
-    private ArrayList<Integer> dependencies; 
+    private ArrayList<Task> dependencies;
     private int taskNumber;
     private  String recurrence;
 
@@ -109,12 +109,17 @@ public class Task {
 
     //Dependencies
     // Get Dependencies
-    public ArrayList<Integer> getDependencies() {
+    public ArrayList<Task> getDependencies() {
         return this.dependencies;
     }
     // Add Dependencies
-    public void addDependency(int taskNumber) {
-        dependencies.add(taskNumber);
+    public void addDependency(String title,ArrayList<Task> tasks) {
+        for(Task task: tasks) {
+            if(task.getTitle().equals(title)) {
+                this.dependencies.add(task);
+                System.out.println("task dependency added "+task.getTitle());
+            }
+        }
     }
 
     // public boolean canComplete() {
