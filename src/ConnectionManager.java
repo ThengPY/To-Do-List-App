@@ -7,7 +7,7 @@ import javafx.scene.control.ListView;
 
 public class ConnectionManager {
     //change depending on path
-    private static String url = "jdbc:sqlite:/Users/theng/To-Do List App/src/tasks.db";
+    private static String url = "jdbc:sqlite:C:/Users/keste/IdeaProjects/To-Do-List-App/src/tasks.db";
 
     public static void main(String[] args) {
         ConnectionManager cm = new ConnectionManager();
@@ -32,10 +32,18 @@ public class ConnectionManager {
                 "dueDate INTEGER NOT NULL," +
                 "category TEXT NOT NULL," +
                 "priority TEXT NOT NULL," +
-                "recurrence TEXT NOT NULL)";
+                "recurrence TEXT NOT NULL," +
+                "dependency TEXT)";
 
-        String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence)" +
-                "VALUES (?,?,?,?,?,?,?)";
+        String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence,dependency)" +
+                "VALUES (?,?,?,?,?,?,?,?)";
+
+        StringBuilder stringDependentTask= new StringBuilder();
+        //string dependant task title name to (a,b,c,)
+        for(Task taskDependentTasks:task.getDependencies()){
+            stringDependentTask.append(taskDependentTasks.getTitle());
+            stringDependentTask.append(",");
+        }
 
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
@@ -50,9 +58,10 @@ public class ConnectionManager {
                 preparedStatement.setString(5, task.getCategory() != null ? task.getCategory() : "None");
                 preparedStatement.setString(6, task.getPriority() != null ? task.getPriority() : "None");
                 preparedStatement.setString(7, task.getReccurence() != null ? task.getReccurence() : "None");
+                preparedStatement.setString(8, stringDependentTask.toString());
 
                 // Debugging statement to verify data
-                System.out.println("Inserting Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+                System.out.println("Inserting Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence() + ", " + stringDependentTask.toString());
 
                 preparedStatement.executeUpdate();
             }
@@ -62,55 +71,43 @@ public class ConnectionManager {
     }
 
     public static void editTask(Task task) {
-        String updateValue = "UPDATE tasklist SET title=?, description=?, dueDate=?, category=?, priority=?, recurrence=? WHERE taskNumber=?";
+        StringBuilder stringDependentTask= new StringBuilder();
+        //string dependant task title name to (a,b,c,)
+        for(Task taskDependentTasks:task.getDependencies()){
+            stringDependentTask.append(taskDependentTasks.getTitle());
+            stringDependentTask.append(",");
+        }
+        String updateValue = "UPDATE tasklist SET title=?," +
+                            "description=?," +
+                            "dueDate=?," +
+                            "category=?," +
+                            "priority=?," +
+                            "recurrence=?," +
+                            "dependency=?" +
+                            "WHERE taskNumber=?";
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 PreparedStatement preparedStatement = con.prepareStatement(updateValue);
                 preparedStatement.setString(1, task.getTitle());
                 preparedStatement.setString(2, task.getDescription());
-                
-                // Check if dueDate is null and set it accordingly
-                if (task.getDueDate() != null) {
-                    preparedStatement.setString(3, task.getDueDate().toString());
-                } else {
-                    preparedStatement.setString(3, "None");
-                }
-                
-                if (task.getCategory() != null) {
-                    preparedStatement.setString(4, task.getCategory());
-                } else {
-                    preparedStatement.setString(4, "None");
-                }
-                
-                if (task.getPriority() != null) {
-                    preparedStatement.setString(5, task.getPriority());
-                } else {
-                    preparedStatement.setString(5, "None");
-                }
-                
-                if (task.getReccurence() != null) {
-                    preparedStatement.setString(6, task.getReccurence());
-                } else {
-                    preparedStatement.setString(6, "None");
-                }
-
-                preparedStatement.setInt(7, task.getTaskNumber());
+                preparedStatement.setString(3, task.getDueDate().toString());
+                preparedStatement.setString(4, task.getCategory());
+                preparedStatement.setString(5, task.getPriority());
+                preparedStatement.setString(6, task.getReccurence());
+                preparedStatement.setString(7,stringDependentTask.toString());
+                preparedStatement.setInt(8, task.getTaskNumber());
     
                 // Debugging statement to verify data
-                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + (task.getDueDate() != null ? task.getDueDate().toString() : "null") + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence());
+                System.out.println("Updating Task: " + task.getTitle() + ", " + task.getDescription() + ", " + task.getDueDate().toString() + ", " + task.getCategory() + ", " + task.getPriority() + ", " + task.getReccurence()+", ["+ stringDependentTask.toString()+"]");
     
-                int rowsAffected = preparedStatement.executeUpdate();
-                if (rowsAffected > 0) {
-                    System.out.println("Task updated successfully: " + task.getTitle());
-                } else {
-                    System.out.println("Failed to update task: " + task.getTitle());
-                }
+                preparedStatement.executeUpdate();
             }
         } catch (SQLException e) {
             e.printStackTrace();
             System.out.println("Failed to update task in the database: " + e.getMessage());
         }
     }
+
     public static void deleteTask(Task task) {
         String deleteRow = "DELETE FROM tasklist WHERE taskNumber=?";
         try (Connection con = DriverManager.getConnection(url)) {
@@ -169,12 +166,34 @@ public class ConnectionManager {
                             dueDate,
                             resultSet.getString("category"),
                             resultSet.getString("priority"),
-                            resultSet.getString("recurrence"));
+                            resultSet.getString("recurrence")
+                    );
                     tasks.add(newTask);
                     taskListView.getItems().add(newTask);
     
                     // Debugging statement to verify data
                     System.out.println("Loaded Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
+                }
+
+                //Read dependency column
+                resultSet = statement.executeQuery(readValue);
+                int i=0;
+                while (resultSet.next()) {
+                    String title =resultSet.getString("title");
+                    String dependantTaskTitle =resultSet.getString("dependency");
+                    if(dependantTaskTitle!=null){
+
+                        String[] splitDependantTaskTitle = dependantTaskTitle.split(",");
+                        for (String s : splitDependantTaskTitle) {
+                            for (Task task : tasks) {
+                                if (task.getTitle().equals(s)) {
+                                    tasks.get(i).addDependency(task.getTitle(),tasks);
+                                }
+                            }
+                        }
+                    }
+                    i++;
+
                 }
             }
         } catch (SQLException e) {

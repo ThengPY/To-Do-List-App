@@ -9,7 +9,7 @@ public class Task {
     private boolean isComplete = false;
     private String category;
     private String priority;
-    private ArrayList<Integer> dependencies; 
+    private ArrayList<Task> dependencies;
     private int taskNumber;
     private  String recurrence;
 
@@ -24,6 +24,30 @@ public class Task {
         this.priority = priority;
         this.recurrence = recurrence;
         this.dependencies = new ArrayList<>();
+    }
+    //second Constructor
+    public Task(int taskNumber, String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependantTaskTitle,ArrayList<Task> tasks) {
+        this.taskNumber = taskNumber;
+        this.title = title;
+        this.description = description;
+        this.dueDate = dueDate;
+        this.isComplete = false;
+        this.category = category;
+        this.priority = priority;
+        this.recurrence = recurrence;
+        this.dependencies = new ArrayList<>();
+        if(dependantTaskTitle!=null) {
+            String[] splitDependantTaskTitle = dependantTaskTitle.split(",");
+            for (String s : splitDependantTaskTitle) {
+                for (Task task : tasks) {
+                    if (task.getTitle().equals(s)) {
+                        this.dependencies.add(task);
+                        System.out.println("task dependency added " + task.getTitle());
+                    }
+                }
+            }
+        }
+
     }
 
     // Getters and Setters
@@ -109,12 +133,17 @@ public class Task {
 
     //Dependencies
     // Get Dependencies
-    public ArrayList<Integer> getDependencies() {
+    public ArrayList<Task> getDependencies() {
         return this.dependencies;
     }
     // Add Dependencies
-    public void addDependency(int taskNumber) {
-        dependencies.add(taskNumber);
+    public void addDependency(String title,ArrayList<Task> tasks) {
+        for(Task task: tasks) {
+            if(task.getTitle().equals(title)) {
+                this.dependencies.add(task);
+                System.out.println(this.title+" task dependency added "+task.getTitle());
+            }
+        }
     }
 
     // public boolean canComplete() {

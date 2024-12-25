@@ -10,6 +10,8 @@ import javafx.stage.Stage;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
@@ -21,9 +23,9 @@ public class App extends Application {
     private ComboBox<String> priorityComboBox = new ComboBox<>();
     private ComboBox<String> categoryComboBox = new ComboBox<>();
     private ComboBox<String> recurrenceComboBox = new ComboBox<>();
-    private ComboBox<Integer> dependenciesComboBox = new ComboBox<>();
+    private ComboBox<String> dependenciesComboBox = new ComboBox<>();
     private int taskNumber = 0;
-    
+    private HashMap<String, List<String>> graph;
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
@@ -41,16 +43,16 @@ public class App extends Application {
                     // Check recurrence interval and automatically add new task when a recurring task is completed
                     if (selectedTask.getCompletionStatus() == true) {
                         if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Daily")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Weekly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         else if (selectedTask.getReccurence().equals("Monthly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence());
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
                         }
                         
                         taskListView.refresh();
@@ -130,7 +132,8 @@ public class App extends Application {
                 dueDatePicker.getValue(),
                 categoryComboBox.getValue(),
                 priorityComboBox.getValue(),
-                recurrenceComboBox.getValue()
+                recurrenceComboBox.getValue(),
+                dependenciesComboBox.getValue()
         )
         );
 
@@ -258,7 +261,7 @@ public class App extends Application {
 
     //Tasks Functions
     // Add Tasks to To-Do List
-    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence) {
+    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependencies) {
         if (title.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
             alert.showAndWait();
@@ -267,7 +270,7 @@ public class App extends Application {
                 taskNumber = 0;
             }
             taskNumber++;
-            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence);
+            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence,dependencies,tasks);
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
@@ -275,7 +278,7 @@ public class App extends Application {
             ConnectionManager.addTask(newTask);
 
             // Debugging statement to verify data
-            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence());
+            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence()+ ", " + newTask.getDependencies().toString());
         }
     }
 
@@ -319,11 +322,16 @@ public class App extends Application {
         priorityComboBox.setValue(selectedTask.getPriority());
         recurrenceComboBox.setValue(selectedTask.getReccurence());
 
-        // Fill in Dependencies Combo Box
-        dependenciesComboBox.getItems().clear();
+       populateDependenciesComboBox(selectedTask);
+    }
+
+    //Fill in Dependencies Combo Box
+    private void populateDependenciesComboBox(Task selectedTask) {
+        dependenciesComboBox.getItems().clear(); // Clear existing items
         for (Task task : tasks) {
-            if (task.getTaskNumber() != selectedTask.getTaskNumber()) {
-                dependenciesComboBox.getItems().add(task.getTaskNumber());
+            // Check if the task is not already a dependency
+            if (!task.equals(selectedTask)&&!selectedTask.getDependencies().contains(task)) {
+                dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
             }
         }
     }
@@ -339,6 +347,7 @@ public class App extends Application {
             selectedTask.setCategory(categoryComboBox.getValue());
             selectedTask.setPriority(priorityComboBox.getValue());
             selectedTask.setRecurrence(recurrenceComboBox.getValue());
+            selectedTask.addDependency(dependenciesComboBox.getValue(),tasks);
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
             //update values in database

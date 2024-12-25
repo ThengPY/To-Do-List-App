@@ -7,11 +7,12 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="lib" level="project" />
+    <orderEntry type="library" name="lib" level="project" />
+    <orderEntry type="library" name="sqlite-jdbc-3.47.0.0" level="project" />
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://D:/Intellij library/sqlite-jdbc/sqlite-jdbc-3.47.0.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/sqlite-jdbc-3.47.0.0.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
