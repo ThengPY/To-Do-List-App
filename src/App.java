@@ -124,11 +124,6 @@ public class App extends Application {
         // dependenciesComboBox.setStyle("-fx-padding: 5 0 5 0");
         HBox dependenciesLayout = new HBox(5, dependenciesLabel, dependenciesComboBox);
 
-        // Set the event handler to populate the combo box when it is shown
-        dependenciesComboBox.setOnShowing(event -> {
-            populateDependenciesComboBox(); // Populate the combo box with current tasks
-        });
-
         // Add Task Button
         Button addButton = new Button("Add");
         addButton.setOnAction(e -> addTask(
@@ -327,14 +322,17 @@ public class App extends Application {
         priorityComboBox.setValue(selectedTask.getPriority());
         recurrenceComboBox.setValue(selectedTask.getReccurence());
 
-       populateDependenciesComboBox();
+       populateDependenciesComboBox(selectedTask);
     }
 
     //Fill in Dependencies Combo Box
-    private void populateDependenciesComboBox() {
+    private void populateDependenciesComboBox(Task selectedTask) {
         dependenciesComboBox.getItems().clear(); // Clear existing items
         for (Task task : tasks) {
-            dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
+            // Check if the task is not already a dependency
+            if (!task.equals(selectedTask)&&!selectedTask.getDependencies().contains(task)) {
+                dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
+            }
         }
     }
 
