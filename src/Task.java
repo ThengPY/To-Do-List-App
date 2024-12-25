@@ -1,5 +1,6 @@
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 public class Task {
@@ -25,7 +26,7 @@ public class Task {
         this.recurrence = recurrence;
         this.dependencies = new ArrayList<>();
     }
-    //second Constructor
+    //Constructor with dependency
     public Task(int taskNumber, String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependantTaskTitle,ArrayList<Task> tasks) {
         this.taskNumber = taskNumber;
         this.title = title;
@@ -42,7 +43,7 @@ public class Task {
                 for (Task task : tasks) {
                     if (task.getTitle().equals(s)) {
                         this.dependencies.add(task);
-                        System.out.println("task dependency added " + task.getTitle());
+                        //System.out.println(this.title + " task dependency added " + task.getTitle());
                     }
                 }
             }
@@ -96,9 +97,9 @@ public class Task {
         return this.isComplete;
     }
 
-    // Set Completion Status
-    public void setCompletionStatus() {
-        this.isComplete = true;
+    // Toggle task as complete / pending
+    public void toggleComplete() {
+        this.isComplete = ! this.isComplete;
     }
 
     // Get Category
@@ -141,31 +142,33 @@ public class Task {
         for(Task task: tasks) {
             if(task.getTitle().equals(title)) {
                 this.dependencies.add(task);
-                System.out.println(this.title+" task dependency added "+task.getTitle());
+                //System.out.println(this.title+" task dependency added "+task.getTitle());
             }
         }
     }
-
-    // public boolean canComplete() {
-    //     for (Task dependency : dependencies) {
-    //         if (!dependency.isComplete) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
-    
-    // Toggle task as complete / pending
-    public void toggleComplete() {
-        this.isComplete = ! this.isComplete;
+    // Set Dependencies
+    public void setDependencies(ArrayList<Task> newDependencies) {
+        this.dependencies = newDependencies;
     }
+
+    // Check if all dependencies are completed
+    public boolean areAllDependenciesCompleted() {
+        for (Task dependency : dependencies) {
+            if (!dependency.getCompletionStatus()) {
+                return false; // Found an incomplete dependency
+            }
+        }
+        return true; // All dependencies are completed
+    }
+    
+
 
     
 
     @Override
     public String toString() {
         String displayTitle = isComplete ? "~~~~ " + title + " ~~~~  (COMPLETED)" : title;
-        return String.format("%d.  %s\n     Description:  %s\n     Due:  %s\n     Category:  %s\n     Recurrence:  %s\n     Priority Level:  %s",
+        return String.format("%d.  %s\n     Description:  %s\n     Due:  %s\n     Category:  %s\n     Recurrence:  %s\n     Priority Level:  %s\n",
                 taskNumber , displayTitle, description != "" ? description : "None", dueDate != null ? dueDate.toString() : "None",
                 category != null ? category : "None",
                 recurrence != null ? recurrence : "None",

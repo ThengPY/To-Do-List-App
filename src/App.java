@@ -11,6 +11,7 @@ import javafx.stage.Stage;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class App extends Application {
@@ -37,33 +38,53 @@ public class App extends Application {
         taskListView.setOnMouseClicked(e -> {
             Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
                 if (e.getButton() == MouseButton.SECONDARY) {
-                    // Allow user to toggle complete when right clicked
-                    selectedTask.toggleComplete(); 
-                    taskListView.refresh();
-                    // Check recurrence interval and automatically add new task when a recurring task is completed
-                    if (selectedTask.getCompletionStatus() == true) {
-                        if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), null, selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
-                        }
-                        else if (selectedTask.getReccurence().equals("Daily")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
-                        }
-                        else if (selectedTask.getReccurence().equals("Weekly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
-                        }
-                        else if (selectedTask.getReccurence().equals("Monthly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),selectedTask.getDependencies().toString());
-                        }
-                        
+                    //Completable check
+                    if(selectedTask.areAllDependenciesCompleted()) {
+                        // Allow user to toggle complete when right-clicked
+                        selectedTask.toggleComplete();
                         taskListView.refresh();
+                        // Check recurrence interval and automatically add new task when a recurring task is completed
+                        if (selectedTask.getCompletionStatus() == true) {
+                            StringBuilder stringDependentTask= new StringBuilder();
+                            //string dependant task title name to (a,b,c,)
+                            for(Task taskDependentTasks:selectedTask.getDependencies()){
+                                stringDependentTask.append(taskDependentTasks.getTitle());
+                                stringDependentTask.append(",");
+                            }
+                            if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
+                                //nothing happens if null
+                            }
+                            else if (selectedTask.getReccurence().equals("Daily")) {
+                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
+                            }
+                            else if (selectedTask.getReccurence().equals("Weekly")) {
+                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
+                            }
+                            else if (selectedTask.getReccurence().equals("Monthly")) {
+                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
+                            }
+
+                            taskListView.refresh();
+                        }
+                    }else{
+                        Alert alert = new Alert(Alert.AlertType.ERROR, "Task dependencies uncompleted", ButtonType.OK);
+                        alert.showAndWait();
                     }
-                } 
+                }
                 else if (e.getClickCount() == 1) {
                     // Fetch data to input fields when task is selected
                     fetchData();
                 }
         });
-      
+
+        // Add the event listener for dependenciesComboBox
+        dependenciesComboBox.setOnShowing(e -> {
+            Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
+            if (selectedTask != null) {
+                populateDependenciesComboBox(selectedTask);
+            }
+        });
+
         // Mark As Complete Label
         Label markAsComplete = new Label("* Right click on task to mark as complete");
         markAsComplete.setStyle("-fx-font-size: 10;");
@@ -257,10 +278,21 @@ public class App extends Application {
 
         //check database for existing tasks
         loadTasks();
+        //System.out.println(tasks.get(0).getDependencies().toString());
+        //System.out.printf("True or False: %s\n",hasCycle(tasks,tasks.get(0)));
+
     }
 
     //Tasks Functions
     // Add Tasks to To-Do List
+
+    //Startup tasks
+    public void loadTasks(){
+        ConnectionManager.loadTasks(tasks,taskListView);
+        taskNumber=tasks.size();
+        taskListView.refresh();
+    }
+
     private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependencies) {
         if (title.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
@@ -269,6 +301,7 @@ public class App extends Application {
             if (taskListView.getItems().isEmpty()) {
                 taskNumber = 0;
             }
+
             taskNumber++;
             Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence,dependencies,tasks);
             tasks.add(newTask);
@@ -282,18 +315,46 @@ public class App extends Application {
         }
     }
 
-    //Startup tasks
-    public void loadTasks(){
-        ConnectionManager.loadTasks(tasks,taskListView);
-        taskNumber=tasks.size();
-        taskListView.refresh();
+    //Edit Tasks
+    public void editTask() {
+        Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
+        if (selectedTask != null) {
+            //Store the original dependencies in a temporary list
+            ArrayList<Task> originalDependencies = new ArrayList<>(selectedTask.getDependencies());
+            taskListView.refresh();
+            selectedTask.setTitle(titleField.getText());
+            selectedTask.setDescription(descriptionField.getText());
+            selectedTask.setDueDate(dueDatePicker.getValue());
+            selectedTask.setCategory(categoryComboBox.getValue());
+            selectedTask.setPriority(priorityComboBox.getValue());
+            selectedTask.setRecurrence(recurrenceComboBox.getValue());
+            selectedTask.addDependency(dependenciesComboBox.getValue(),tasks);
+
+            if(hasCycle(tasks,selectedTask)){
+
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Cycle Detected", ButtonType.OK);
+                alert.showAndWait();
+                //reset selectedTask
+                selectedTask.setDependencies(originalDependencies);
+                return;
+            }
+
+            taskListView.getSelectionModel().clearSelection();
+            clearInputFields();
+            //update values in database
+            ConnectionManager.editTask(selectedTask);
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
+            alert.showAndWait();
+        }
     }
 
     //Delete Selected Task From To-Do List
     private void deleteTask() {
         Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
         if (selectedTask != null) {
-            tasks.remove(selectedTask);
+            removeTask(selectedTask);
             taskListView.getItems().remove(selectedTask);
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
@@ -306,9 +367,22 @@ public class App extends Application {
             //delete from database and update task number
             ConnectionManager.deleteTask(selectedTask);
             ConnectionManager.updateTaskNumber(tasks);
+            for(Task task : tasks){
+                ConnectionManager.editTask(task);
+            }
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
             alert.showAndWait();
+        }
+    }
+
+    private void removeTask(Task taskToRemove) {
+        // Remove the task from the main list
+        tasks.remove(taskToRemove);
+
+        // Clean up dependencies in other tasks
+        for (Task task : tasks) {
+            task.getDependencies().remove(taskToRemove); // Remove the reference to the removed task
         }
     }
 
@@ -325,7 +399,16 @@ public class App extends Application {
        populateDependenciesComboBox(selectedTask);
     }
 
-    //Fill in Dependencies Combo Box
+    //Fill in Dependencies Combo Box for addTask
+    private void populateDependenciesComboBox() {
+        dependenciesComboBox.getItems().clear(); // Clear existing items
+        for (Task task : tasks) {
+            // Check if the task is not already a dependency
+                dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
+        }
+    }
+
+    //Fill in Dependencies Combo Box for editTask
     private void populateDependenciesComboBox(Task selectedTask) {
         dependenciesComboBox.getItems().clear(); // Clear existing items
         for (Task task : tasks) {
@@ -335,30 +418,6 @@ public class App extends Application {
             }
         }
     }
-
-    //Edit Tasks
-    public void editTask() {
-        Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
-        if (selectedTask != null) {
-            taskListView.refresh();
-            selectedTask.setTitle(titleField.getText());
-            selectedTask.setDescription(descriptionField.getText());
-            selectedTask.setDueDate(dueDatePicker.getValue());
-            selectedTask.setCategory(categoryComboBox.getValue());
-            selectedTask.setPriority(priorityComboBox.getValue());
-            selectedTask.setRecurrence(recurrenceComboBox.getValue());
-            selectedTask.addDependency(dependenciesComboBox.getValue(),tasks);
-            taskListView.getSelectionModel().clearSelection();
-            clearInputFields();
-            //update values in database
-            ConnectionManager.editTask(selectedTask);
-        }
-        else {
-            Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
-            alert.showAndWait();
-        }
-    }
-
 
      // Clear input fields after adding new task
      public void clearInputFields() {
@@ -590,6 +649,35 @@ public class App extends Application {
     // ResultSet rs;
     // int row, col;
 
+    public static boolean hasCycle(ArrayList<Task> tasks, Task newTask) {
+        HashSet<Task> visited = new HashSet<>();
+        HashSet<Task> recursionStack = new HashSet<>();
+
+        // Start the cycle detection from the new task
+        return hasCycleUtil(newTask, visited, recursionStack, tasks);
+    }
+
+    private static boolean hasCycleUtil(Task task, HashSet<Task> visited, HashSet<Task> recursionStack, ArrayList<Task> tasks) {
+        if (recursionStack.contains(task)) {
+            return true; // Cycle detected
+        }
+        if (visited.contains(task)) {
+            return false; // Already visited this node
+        }
+
+        visited.add(task);
+        recursionStack.add(task);
+
+        // Check dependencies of the current task
+        for (Task dependency : task.getDependencies()) {
+            if (hasCycleUtil(dependency, visited, recursionStack, tasks)) {
+                return true; // Cycle detected in the dependency
+            }
+        }
+
+        recursionStack.remove(task); // Remove from recursion stack
+        return false; // No cycle detected
+    }
 
     public static void main(String[] args) {
         launch(args);

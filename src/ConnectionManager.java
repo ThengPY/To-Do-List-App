@@ -27,12 +27,12 @@ public class ConnectionManager {
     public static void addTask(Task task) {
         String createTable = "CREATE TABLE IF NOT EXISTS tasklist(" +
                 "taskNumber INTEGER NOT NULL," +
-                "title TEXT NOT NULL," +
-                "description TEXT NOT NULL," +
-                "dueDate INTEGER NOT NULL," +
-                "category TEXT NOT NULL," +
-                "priority TEXT NOT NULL," +
-                "recurrence TEXT NOT NULL," +
+                "title TEXT," +
+                "description TEXT," +
+                "dueDate INTEGER," +
+                "category TEXT," +
+                "priority TEXT," +
+                "recurrence TEXT," +
                 "dependency TEXT)";
 
         String insertValue = "INSERT into tasklist(taskNumber,title,description,dueDate,category,priority,recurrence,dependency)" +
@@ -142,11 +142,22 @@ public class ConnectionManager {
     }
 
     public static void loadTasks(ArrayList<Task> tasks, ListView<Task> taskListView) {
+        String createTable = "CREATE TABLE IF NOT EXISTS tasklist(" +
+                "taskNumber INTEGER NOT NULL," +
+                "title TEXT," +
+                "description TEXT," +
+                "dueDate INTEGER," +
+                "category TEXT," +
+                "priority TEXT," +
+                "recurrence TEXT," +
+                "dependency TEXT)";
+
         String readValue = "SELECT * FROM tasklist ORDER BY taskNumber ASC";
     
         try (Connection con = DriverManager.getConnection(url)) {
             if (con != null) {
                 Statement statement = con.createStatement();
+                statement.executeUpdate(createTable);
                 ResultSet resultSet = statement.executeQuery(readValue);
     
                 while (resultSet.next()) {
@@ -182,7 +193,8 @@ public class ConnectionManager {
                     String title =resultSet.getString("title");
                     String dependantTaskTitle =resultSet.getString("dependency");
                     if(dependantTaskTitle!=null){
-
+                        //for debug
+                        //System.out.printf("Connection manager\t%s add dependency %s\n",title,dependantTaskTitle);
                         String[] splitDependantTaskTitle = dependantTaskTitle.split(",");
                         for (String s : splitDependantTaskTitle) {
                             for (Task task : tasks) {
