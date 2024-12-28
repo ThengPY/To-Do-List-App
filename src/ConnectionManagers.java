@@ -4,13 +4,17 @@ import java.time.LocalDate;
 // import java.time.ZoneOffset;
 import java.util.ArrayList;
 import javafx.scene.control.ListView;
+import java.sql.*;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 
-public class ConnectionManager {
+public class ConnectionManagers {
     //change depending on path
-    private static String url = "jdbc:sqlite:C:/Users/keste/IdeaProjects/To-Do-List-App/src/tasks.db";
+    private static String url = "jdbc:sqlite:C:/Users/60115/IdeaProjects/To-Do-List-App2/src/tasks.db";
 
     public static void main(String[] args) {
-        ConnectionManager cm = new ConnectionManager();
+        ConnectionManagers cm = new ConnectionManagers();
         cm.connect();
     }
 
@@ -212,4 +216,40 @@ public class ConnectionManager {
             e.printStackTrace();
         }
     }
+
+    public ArrayList<Task> getTasksDueIn24Hours() {
+        ArrayList<Task> tasksDueSoon = new ArrayList<>();
+        String query = "SELECT * FROM tasklist WHERE dueDate IS NOT NULL";
+
+        try (Connection con = DriverManager.getConnection(url)) {
+            Statement statement = con.createStatement();
+            ResultSet resultSet = statement.executeQuery(query);
+
+            while (resultSet.next()) {
+                String dueDateStr = resultSet.getString("dueDate");
+                LocalDate dueDate = LocalDate.parse(dueDateStr);
+
+                if (dueDate.minusDays(1).equals(LocalDate.now())) {
+                    Task task = new Task(
+                            resultSet.getInt("taskNumber"),
+                            resultSet.getString("title"),
+                            resultSet.getString("description"),
+                            dueDate,
+                            resultSet.getString("category"),
+                            resultSet.getString("priority"),
+                            resultSet.getString("recurrence")
+                    );
+                    tasksDueSoon.add(task);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return tasksDueSoon;
+    }
 }
+
+
+
+

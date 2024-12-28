@@ -2,9 +2,11 @@
   <library name="lib">
     <CLASSES>
       <root url="file://D:/Intellij library/javafx-sdk-23.0.1/lib" />
+      <root url="file://$USER_HOME$/Downloads/openjfx-23.0.1_windows-x64_bin-sdk (2)/javafx-sdk-23.0.1/lib" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />
+    <jarDirectory url="file://$USER_HOME$/Downloads/openjfx-23.0.1_windows-x64_bin-sdk (2)/javafx-sdk-23.0.1/lib" recursive="false" />
     <jarDirectory url="file://D:/Intellij library/javafx-sdk-23.0.1/lib" recursive="false" />
   </library>
 </component>

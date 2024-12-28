@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
@@ -27,55 +30,74 @@ public class App extends Application {
     private ComboBox<String> dependenciesComboBox = new ComboBox<>();
     private int taskNumber = 0;
     private HashMap<String, List<String>> graph;
+
+    // New variables for email functionality
+    private TextField emailField = new TextField();  // Email input field
+    private Button setEmailButton = new Button("Set Email for Reminders"); // Button to set email
+    private String userEmail = "";  // Store the user's email for reminder notifications
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
 
         taskListView = new ListView<>();
         taskListView.setMaxWidth(450);
-        
+
         // Mouse Click On taskListView Event
         taskListView.setOnMouseClicked(e -> {
             Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
-                if (e.getButton() == MouseButton.SECONDARY) {
-                    //Completable check
-                    if(selectedTask.areAllDependenciesCompleted()) {
-                        // Allow user to toggle complete when right-clicked
-                        selectedTask.toggleComplete();
-                        taskListView.refresh();
-                        // Check recurrence interval and automatically add new task when a recurring task is completed
-                        if (selectedTask.getCompletionStatus() == true) {
-                            StringBuilder stringDependentTask= new StringBuilder();
-                            //string dependant task title name to (a,b,c,)
-                            for(Task taskDependentTasks:selectedTask.getDependencies()){
-                                stringDependentTask.append(taskDependentTasks.getTitle());
-                                stringDependentTask.append(",");
-                            }
-                            if (selectedTask.getDueDate() == null && ! selectedTask.getReccurence().equals("None")) {
-                                //nothing happens if null
-                            }
-                            else if (selectedTask.getReccurence().equals("Daily")) {
-                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
-                            }
-                            else if (selectedTask.getReccurence().equals("Weekly")) {
-                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
-                            }
-                            else if (selectedTask.getReccurence().equals("Monthly")) {
-                                addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(),stringDependentTask.toString());
-                            }
-
-                            taskListView.refresh();
+            if (e.getButton() == MouseButton.SECONDARY) {
+                //Completable check
+                if (selectedTask.areAllDependenciesCompleted()) {
+                    // Allow user to toggle complete when right-clicked
+                    selectedTask.toggleComplete();
+                    taskListView.refresh();
+                    // Check recurrence interval and automatically add new task when a recurring task is completed
+                    if (selectedTask.getCompletionStatus() == true) {
+                        StringBuilder stringDependentTask = new StringBuilder();
+                        //string dependant task title name to (a,b,c,)
+                        for (Task taskDependentTasks : selectedTask.getDependencies()) {
+                            stringDependentTask.append(taskDependentTasks.getTitle());
+                            stringDependentTask.append(",");
                         }
-                    }else{
-                        Alert alert = new Alert(Alert.AlertType.ERROR, "Task dependencies uncompleted", ButtonType.OK);
-                        alert.showAndWait();
+                        if (selectedTask.getDueDate() == null && !selectedTask.getReccurence().equals("None")) {
+                            //nothing happens if null
+                        } else if (selectedTask.getReccurence().equals("Daily")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
+                        } else if (selectedTask.getReccurence().equals("Weekly")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
+                        } else if (selectedTask.getReccurence().equals("Monthly")) {
+                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
+                        }
+
+                        taskListView.refresh();
                     }
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Task dependencies uncompleted", ButtonType.OK);
+                    alert.showAndWait();
                 }
-                else if (e.getClickCount() == 1) {
-                    // Fetch data to input fields when task is selected
-                    fetchData();
-                }
+            } else if (e.getClickCount() == 1) {
+                // Fetch data to input fields when task is selected
+                fetchData();
+            }
         });
+
+        // Email input field
+        Label emailLabel = new Label("Email Address for Reminders: ");
+        emailField.setPromptText("Your Email Address");
+
+        // Button to set email address
+        setEmailButton.setOnAction(e -> {
+            userEmail = emailField.getText().trim();
+            if (!userEmail.isEmpty()) {
+                System.out.println("Email set for reminders: " + userEmail);
+                startEmailReminderTask();
+            } else {
+                Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a valid email address.", ButtonType.OK);
+                alert.showAndWait();
+            }
+        });
+
 
         // Add the event listener for dependenciesComboBox
         dependenciesComboBox.setOnShowing(e -> {
@@ -84,6 +106,10 @@ public class App extends Application {
                 populateDependenciesComboBox(selectedTask);
             }
         });
+
+        // Layout for the email input and button
+        HBox emailLayout = new HBox(5, emailLabel, emailField, setEmailButton);
+        emailLayout.setAlignment(Pos.CENTER);
 
         // Mark As Complete Label
         Label markAsComplete = new Label("* Right click on task to mark as complete");
@@ -104,10 +130,10 @@ public class App extends Application {
         Label descriptionLabel = new Label("Description: ");
         descriptionLabel.setStyle("-fx-padding: 3 0 0 0;");
         descriptionField.setPromptText("Describe task");
-        descriptionField.setMaxWidth(120); 
-        descriptionField.setPrefHeight(20); 
+        descriptionField.setMaxWidth(120);
+        descriptionField.setPrefHeight(20);
         HBox descriptionLayout = new HBox(5, descriptionLabel, descriptionField);
-        
+
         // HBox for Due Date
         Label dueDateLabel = new Label("Due Date:");
         dueDatePicker.setPromptText("Select Due Date");
@@ -140,7 +166,7 @@ public class App extends Application {
         Label dependenciesLabel = new Label("Task Dependencies:");
         dependenciesLabel.setStyle("-fx-padding: 3 0 0 0;");
         dependenciesComboBox.setPrefWidth(80);
-        
+
         // dependenciesComboBox.getItems().addAll(tasks.get(taskNumber));
         // dependenciesComboBox.setStyle("-fx-padding: 5 0 5 0");
         HBox dependenciesLayout = new HBox(5, dependenciesLabel, dependenciesComboBox);
@@ -148,14 +174,14 @@ public class App extends Application {
         // Add Task Button
         Button addButton = new Button("Add");
         addButton.setOnAction(e -> addTask(
-                titleField.getText(),
-                descriptionField.getText(),
-                dueDatePicker.getValue(),
-                categoryComboBox.getValue(),
-                priorityComboBox.getValue(),
-                recurrenceComboBox.getValue(),
-                dependenciesComboBox.getValue()
-        )
+                        titleField.getText(),
+                        descriptionField.getText(),
+                        dueDatePicker.getValue(),
+                        categoryComboBox.getValue(),
+                        priorityComboBox.getValue(),
+                        recurrenceComboBox.getValue(),
+                        dependenciesComboBox.getValue()
+                )
         );
 
         // Edit Task Button
@@ -188,7 +214,7 @@ public class App extends Application {
         priorityDescending.setOnAction(e -> {
             sortPriorityDescending();
         });
-        
+
         // Buttons Layout (Add, Edit, Delete)
         HBox buttonLayout1 = new HBox(15, addButton, editButton, deleteButton);
 
@@ -197,7 +223,7 @@ public class App extends Application {
 
         // Buttons Layout (Sort by Priority)
         HBox buttonLayout3 = new HBox(15, priorityAscending, priorityDescending);
-        
+
         //Searching
         //Search Title
         Label searchTitle = new Label("== Search by Title or Description ==");
@@ -217,7 +243,7 @@ public class App extends Application {
         //Search and Reset Button Hbox
         HBox searchHBox = new HBox(10, searchButton, resetButton);
         searchHBox.setAlignment(Pos.CENTER_RIGHT);
-        
+
         //Search Button Event Handler
         searchButton.setOnAction(e -> searchTasks());
         //Reset Button Event Handler
@@ -232,11 +258,11 @@ public class App extends Application {
         Label completionRateLabel = new Label("- Completion Rate: ");
         Label taskCategoriesLabel = new Label("- Task Categories: ");
         VBox analyticsDashboardVBox = new VBox(2, analyticsLabel, totalTasksLabel,
-        completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+                completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
 
         // VBox for all elements
-        VBox inputLayout = new VBox(10, markAsComplete, addDelete,  titleLayout, descriptionLayout, dueDateLayout,  categoryLayout, 
-        recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox, analyticsDashboardVBox);
+        VBox inputLayout = new VBox(10,emailLayout,markAsComplete, addDelete, titleLayout, descriptionLayout, dueDateLayout, categoryLayout,
+                recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox, analyticsDashboardVBox);
         inputLayout.setPrefWidth(200);
 
         // Border Pane
@@ -272,23 +298,56 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 720, 760);
+        Scene scene = new Scene(layout, 900, 760);
         primaryStage.setScene(scene);
         primaryStage.show();
 
         //check database for existing tasks
         loadTasks();
+
         //System.out.println(tasks.get(0).getDependencies().toString());
         //System.out.printf("True or False: %s\n",hasCycle(tasks,tasks.get(0)));
+    }
 
+   //Email Reminder Task Function
+    private void startEmailReminderTask() {
+        // Start a scheduled task that runs every 24 hours to check for tasks due in 24 hours
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> sendTaskReminderEmails(), 0, 24, TimeUnit.HOURS);
+    }
+
+    private void sendTaskReminderEmails() {
+        if (userEmail.isEmpty()) {
+            System.out.println("No email address set for notifications.");
+            return;
+        }
+        // Instantiate the ConnectionManager and get tasks due in the next 24 hours
+        ConnectionManagers connectionManager = new ConnectionManagers();
+        ArrayList<Task> tasksDueSoon = connectionManager.getTasksDueIn24Hours();
+
+        if (tasksDueSoon.isEmpty()) {
+            System.out.println("No tasks due in the next 24 hours.");
+            return;
+        }
+        for (Task task : tasksDueSoon) {
+            String subject = "Task Reminder: " + task.getTitle();
+            String content = "You have a task due in 24 hours:\n\n" +
+                    "Title: " + task.getTitle() + "\n" +
+                    "Description: " + task.getDescription() + "\n" +
+                    "Due Date: " + task.getDueDate() + "\n" +
+                    "Category: " + task.getCategory() + "\n" +
+                    "Priority: " + task.getPriority() + "\n";
+
+            // Call a method to send the email
+            EmailNotification.sendEmail(userEmail, subject, content);
+        }
     }
 
     //Tasks Functions
     // Add Tasks to To-Do List
-
     //Startup tasks
     public void loadTasks(){
-        ConnectionManager.loadTasks(tasks,taskListView);
+        ConnectionManagers.loadTasks(tasks,taskListView);
         taskNumber=tasks.size();
         taskListView.refresh();
     }
@@ -308,7 +367,7 @@ public class App extends Application {
             taskListView.getItems().add(newTask);
             clearInputFields();
             taskListView.refresh();
-            ConnectionManager.addTask(newTask);
+            ConnectionManagers.addTask(newTask);
 
             // Debugging statement to verify data
             System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence()+ ", " + newTask.getDependencies().toString());
@@ -342,7 +401,7 @@ public class App extends Application {
             taskListView.getSelectionModel().clearSelection();
             clearInputFields();
             //update values in database
-            ConnectionManager.editTask(selectedTask);
+            ConnectionManagers.editTask(selectedTask);
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
@@ -365,10 +424,10 @@ public class App extends Application {
             taskNumber--; // to assign correct task number when add new task
             taskListView.refresh();
             //delete from database and update task number
-            ConnectionManager.deleteTask(selectedTask);
-            ConnectionManager.updateTaskNumber(tasks);
+            ConnectionManagers.deleteTask(selectedTask);
+            ConnectionManagers.updateTaskNumber(tasks);
             for(Task task : tasks){
-                ConnectionManager.editTask(task);
+                ConnectionManagers.editTask(task);
             }
         } else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to delete.", ButtonType.OK);
@@ -470,7 +529,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager.updateTaskNumber(tasks);
+        ConnectionManagers.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -512,7 +571,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager.updateTaskNumber(tasks);
+        ConnectionManagers.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -553,7 +612,7 @@ public class App extends Application {
       }
     }
     //update task number
-    ConnectionManager.updateTaskNumber(tasks);
+    ConnectionManagers.updateTaskNumber(tasks);
     updateTaskListView();
 }
     
@@ -594,7 +653,7 @@ public class App extends Application {
             }
         }
         //update task number
-        ConnectionManager.updateTaskNumber(tasks);
+        ConnectionManagers.updateTaskNumber(tasks);
         updateTaskListView();
     }
 
@@ -678,7 +737,6 @@ public class App extends Application {
         recursionStack.remove(task); // Remove from recursion stack
         return false; // No cycle detected
     }
-
     public static void main(String[] args) {
         launch(args);
     }

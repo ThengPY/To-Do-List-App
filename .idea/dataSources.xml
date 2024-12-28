@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="tasks.db" uuid="4ae7633c-860f-41e9-b59d-e8b05738bcc5">
+    <data-source source="LOCAL" name="tasks.db" uuid="a1243c57-2781-4857-ace2-561294880616">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:$PROJECT_DIR$/src/tasks.db</jdbc-url>
+      <jdbc-url>jdbc:sqlite:$USER_HOME$/Downloads/tasks.db</jdbc-url>
       <jdbc-additional-properties>
         <property name="com.intellij.clouds.kubernetes.db.enabled" value="false" />
       </jdbc-additional-properties>
