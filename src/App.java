@@ -36,12 +36,31 @@ public class App extends Application {
     private Button setEmailButton = new Button("Set"); // Button to set email
     private String userEmail = "";  // Store the user's email for reminder notifications
 
+    // Labels for Analytics Dashboard
+    private Label totalTasksLabel = new Label("- Total tasks: ");
+    private Label completedTasksLabel = new Label("- Completed: ");
+    private Label pendingTasksLabel = new Label("- Pending: ");
+    private Label completionRateLabel = new Label("- Completion Rate: ");
+    private Label taskCategoriesLabel = new Label("- Task Categories: ");
+
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("Todo List App");
-
+        
         taskListView = new ListView<>();
-        taskListView.setMaxWidth(450);
+        taskListView.setMaxWidth(520);
+
+        //Analytics Dashboard
+        Label analyticsLabel = new Label("===== Analytics Dashboard =====");
+        VBox analyticsDashboardVBox = new VBox(2, analyticsLabel, totalTasksLabel,
+                completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+                
+        // Load tasks from database
+        loadTasks();
+        
+        // Update the analytics dashboard on startup
+        updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
 
         // Mouse Click On taskListView Event
         taskListView.setOnMouseClicked(e -> {
@@ -51,6 +70,10 @@ public class App extends Application {
                 if (selectedTask.areAllDependenciesCompleted()) {
                     // Allow user to toggle complete when right-clicked
                     selectedTask.toggleComplete();
+
+                    // Update the analytics dashboard
+                    updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
                     taskListView.refresh();
 
                      // If the task is toggled to incomplete, update tasks that depend on it
@@ -281,16 +304,7 @@ public class App extends Application {
         //Reset Button Event Handler
         resetButton.setOnAction(e -> resetTaskListView());
 
-        //Analytics Dashboard
-        Label analyticsLabel = new Label("===== Analytics Dashboard =====");
-        analyticsLabel.setStyle("-fx-font-weight: bold");
-        Label totalTasksLabel = new Label("- Total tasks: ");
-        Label completedTasksLabel = new Label("- Completed: ");
-        Label pendingTasksLabel = new Label("- Pending: ");
-        Label completionRateLabel = new Label("- Completion Rate: ");
-        Label taskCategoriesLabel = new Label("- Task Categories: ");
-        VBox analyticsDashboardVBox = new VBox(2, analyticsLabel, totalTasksLabel,
-                completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
 
         // VBox for all elements
         VBox inputLayout = new VBox(10, emailLabel, emailLayout,markAsComplete, addDelete, titleLayout, descriptionLayout, dueDateLayout, categoryLayout,
@@ -330,15 +344,9 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 720, 820);
+        Scene scene = new Scene(layout, 790, 900);
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        //check database for existing tasks
-        loadTasks();
-
-        //System.out.println(tasks.get(0).getDependencies().toString());
-        //System.out.printf("True or False: %s\n",hasCycle(tasks,tasks.get(0)));
     }
 
    //Email Reminder Task Function
@@ -401,6 +409,9 @@ public class App extends Application {
             taskListView.refresh();
             ConnectionManagers.addTask(newTask);
 
+            // Update the analytics dashboard
+            updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
             // Debugging statement to verify data
             System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence()+ ", " + newTask.getDependencies().toString());
         }
@@ -421,6 +432,9 @@ public class App extends Application {
             selectedTask.setRecurrence(recurrenceComboBox.getValue());
             selectedTask.addDependency(dependenciesComboBox.getValue(),tasks);
 
+            // Update the analytics dashboard
+            updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
             if(hasCycle(tasks,selectedTask)){
 
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Cycle Detected", ButtonType.OK);
@@ -434,6 +448,8 @@ public class App extends Application {
             clearInputFields();
             //update values in database
             ConnectionManagers.editTask(selectedTask);
+
+
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please select a task to edit.", ButtonType.OK);
@@ -455,6 +471,10 @@ public class App extends Application {
             }
             taskNumber--; // to assign correct task number when add new task
             taskListView.refresh();
+
+            // Update the analytics dashboard
+            updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
+
             //delete from database and update task number
             ConnectionManagers.deleteTask(selectedTask);
             ConnectionManagers.updateTaskNumber(tasks);
@@ -739,6 +759,7 @@ public class App extends Application {
             }
         }
         taskListView.refresh(); // Refresh the ListView to reflect the updated status
+        updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
     }
     
     public static boolean hasCycle(ArrayList<Task> tasks, Task newTask) {
@@ -769,6 +790,57 @@ public class App extends Application {
 
         recursionStack.remove(task); // Remove from recursion stack
         return false; // No cycle detected
+    }
+
+    // Data Analytics Functions
+    // Method to calculate total tasks
+    private int getTotalTasks() {
+        return tasks.size();
+    }
+
+    // Method to calculate completed tasks
+    private int getCompletedTasks() {
+        return (int) tasks.stream().filter(Task::getCompletionStatus).count();
+    }
+
+    // Method to calculate pending tasks
+    private int getPendingTasks() {
+        return getTotalTasks() - getCompletedTasks();
+    }
+
+    // Method to calculate completion rate
+    private double getCompletionRate() {
+        if (getTotalTasks() == 0) return 0.0;
+        return (double) getCompletedTasks() / getTotalTasks() * 100;
+    }
+
+    // Method to calculate categorized task summary
+    private String getCategorizedTaskSummary() {
+        HashMap<String, Integer> categoryCount = new HashMap<>();
+        for (Task task : tasks) {
+            String category = task.getCategory();
+            if (category != null && !category.equalsIgnoreCase("None")) {
+                categoryCount.put(category, categoryCount.getOrDefault(category, 0) + 1);
+            }
+        }
+        StringBuilder summary = new StringBuilder();
+        for (String category : categoryCount.keySet()) {
+            summary.append("   ").append(category).append(": ").append(categoryCount.get(category)).append("\n"); // Add two spaces before every category
+        }
+        return summary.toString().trim(); // Trim the trailing newline
+    }
+
+    // Update the analytics dashboard
+    private void updateAnalyticsDashboard(Label totalTasksLabel, Label completedTasksLabel, Label pendingTasksLabel, Label completionRateLabel, Label taskCategoriesLabel) {
+        totalTasksLabel.setText("- Total tasks: " + getTotalTasks());
+        completedTasksLabel.setText("- Completed: " + getCompletedTasks());
+        pendingTasksLabel.setText("- Pending: " + getPendingTasks());
+        completionRateLabel.setText("- Completion Rate: " + String.format("%.2f", getCompletionRate()) + "%");
+    
+        // Enable text wrapping for the task categories label
+        taskCategoriesLabel.setWrapText(true);
+        String categories = getCategorizedTaskSummary(); // No need to trim() here since it's already trimmed
+        taskCategoriesLabel.setText("- Task Categories:" + (categories.isEmpty() ? "" : "\n   " + categories));
     }
     public static void main(String[] args) {
         launch(args);
