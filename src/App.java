@@ -52,6 +52,8 @@ public class App extends Application {
 
         //Analytics Dashboard
         Label analyticsLabel = new Label("===== Analytics Dashboard =====");
+        analyticsLabel.setStyle("-fx-font-weight: bold");
+
         VBox analyticsDashboardVBox = new VBox(2, analyticsLabel, totalTasksLabel,
                 completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
                 
