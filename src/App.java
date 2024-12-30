@@ -33,7 +33,7 @@ public class App extends Application {
 
     // New variables for email functionality
     private TextField emailField = new TextField();  // Email input field
-    private Button setEmailButton = new Button("Set Email for Reminders"); // Button to set email
+    private Button setEmailButton = new Button("Set"); // Button to set email
     private String userEmail = "";  // Store the user's email for reminder notifications
 
     @Override
@@ -47,33 +47,64 @@ public class App extends Application {
         taskListView.setOnMouseClicked(e -> {
             Task selectedTask = taskListView.getSelectionModel().getSelectedItem();
             if (e.getButton() == MouseButton.SECONDARY) {
-                //Completable check
+                // Completable check
                 if (selectedTask.areAllDependenciesCompleted()) {
                     // Allow user to toggle complete when right-clicked
                     selectedTask.toggleComplete();
                     taskListView.refresh();
+
+                     // If the task is toggled to incomplete, update tasks that depend on it
+                    if (!selectedTask.getCompletionStatus()) {
+                        updateTasksDependingOn(selectedTask);
+                    }
+
                     // Check recurrence interval and automatically add new task when a recurring task is completed
-                    if (selectedTask.getCompletionStatus() == true) {
+                    if (selectedTask.getCompletionStatus() == true && !selectedTask.getReccurence().equals("None")) {
                         StringBuilder stringDependentTask = new StringBuilder();
-                        //string dependant task title name to (a,b,c,)
+                        // String dependent task title names (e.g., "a,b,c")
                         for (Task taskDependentTasks : selectedTask.getDependencies()) {
                             stringDependentTask.append(taskDependentTasks.getTitle());
                             stringDependentTask.append(",");
                         }
-                        if (selectedTask.getDueDate() == null && !selectedTask.getReccurence().equals("None")) {
-                            //nothing happens if null
-                        } else if (selectedTask.getReccurence().equals("Daily")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusDays(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
-                        } else if (selectedTask.getReccurence().equals("Weekly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusWeeks(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
-                        } else if (selectedTask.getReccurence().equals("Monthly")) {
-                            addTask(selectedTask.getTitle(), selectedTask.getDescription(), selectedTask.getDueDate().plusMonths(1), selectedTask.getCategory(), selectedTask.getPriority(), selectedTask.getReccurence(), stringDependentTask.toString());
+        
+                        // Calculate the new due date based on the recurrence interval
+                        LocalDate newDueDate = selectedTask.getDueDate(); // Default to the original due date (can be null)
+                        switch (selectedTask.getReccurence()) {
+                            case "Daily":
+                                newDueDate = selectedTask.getDueDate() != null ? selectedTask.getDueDate().plusDays(1) : null;
+                                break;
+                            case "Weekly":
+                                newDueDate = selectedTask.getDueDate() != null ? selectedTask.getDueDate().plusWeeks(1) : null;
+                                break;
+                            case "Monthly":
+                                newDueDate = selectedTask.getDueDate() != null ? selectedTask.getDueDate().plusMonths(1) : null;
+                                break;
                         }
-
+        
+                        // Add the new recurring task
+                        addTask(selectedTask.getTitle(), selectedTask.getDescription(), newDueDate,
+                                selectedTask.getCategory(), selectedTask.getPriority(),
+                                selectedTask.getReccurence(), stringDependentTask.toString());
                         taskListView.refresh();
                     }
                 } else {
-                    Alert alert = new Alert(Alert.AlertType.ERROR, "Task dependencies uncompleted", ButtonType.OK);
+                    // Build a list of incomplete dependencies
+                    StringBuilder incompleteDependencies = new StringBuilder();
+                    for (Task dependency : selectedTask.getDependencies()) {
+                        if (!dependency.getCompletionStatus()) {
+                            incompleteDependencies.append(dependency.getTitle()).append(", ");
+                        }
+                    }
+                    // Remove the trailing comma and space
+                    if (incompleteDependencies.length() > 0) {
+                        incompleteDependencies.setLength(incompleteDependencies.length() - 2);
+                    }
+        
+                    // Show an alert with the list of incomplete dependencies
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Cannot Complete Task");
+                    alert.setHeaderText("Task \"" + selectedTask.getTitle() + "\" cannot be completed yet.");
+                    alert.setContentText("The following task dependencies are incomplete: " + incompleteDependencies.toString());
                     alert.showAndWait();
                 }
             } else if (e.getClickCount() == 1) {
@@ -81,6 +112,7 @@ public class App extends Application {
                 fetchData();
             }
         });
+        
 
         // Email input field
         Label emailLabel = new Label("Email Address for Reminders: ");
@@ -108,7 +140,7 @@ public class App extends Application {
         });
 
         // Layout for the email input and button
-        HBox emailLayout = new HBox(5, emailLabel, emailField, setEmailButton);
+        HBox emailLayout = new HBox(5, emailField, setEmailButton);
         emailLayout.setAlignment(Pos.CENTER);
 
         // Mark As Complete Label
@@ -261,7 +293,7 @@ public class App extends Application {
                 completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
 
         // VBox for all elements
-        VBox inputLayout = new VBox(10,emailLayout,markAsComplete, addDelete, titleLayout, descriptionLayout, dueDateLayout, categoryLayout,
+        VBox inputLayout = new VBox(10, emailLabel, emailLayout,markAsComplete, addDelete, titleLayout, descriptionLayout, dueDateLayout, categoryLayout,
                 recurringLayout, priorityLayout, dependenciesLayout, buttonLayout1, sortBy, buttonLayout2, buttonLayout3, searchTitle, searchField, searchHBox, analyticsDashboardVBox);
         inputLayout.setPrefWidth(200);
 
@@ -298,7 +330,7 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 900, 760);
+        Scene scene = new Scene(layout, 720, 820);
         primaryStage.setScene(scene);
         primaryStage.show();
 
@@ -698,16 +730,17 @@ public class App extends Application {
         searchField.clear();
     }
 
-    // Add Task Dependencies
-    // private void addTaskDependencies() {
-
-    // }
-
-    // Connect with database
-    // static Connection conn;
-    // ResultSet rs;
-    // int row, col;
-
+    // Set task dependencies to incomplete if the task is toggle to incomplete
+    private void updateTasksDependingOn(Task task) {
+        for (Task t : tasks) {
+            if (t.getDependencies().contains(task)) {
+                t.setCompletionStatus(false); // Set the dependent task to incomplete
+                updateTasksDependingOn(t); // Recursively update tasks that depend on this task
+            }
+        }
+        taskListView.refresh(); // Refresh the ListView to reflect the updated status
+    }
+    
     public static boolean hasCycle(ArrayList<Task> tasks, Task newTask) {
         HashSet<Task> visited = new HashSet<>();
         HashSet<Task> recursionStack = new HashSet<>();

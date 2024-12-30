@@ -97,11 +97,16 @@ public class Task {
         return this.isComplete;
     }
 
-    // Toggle task as complete / pending
-    public void toggleComplete() {
-        this.isComplete = ! this.isComplete;
+    // Set Completion Status
+    public void setCompletionStatus(boolean status) {
+        this.isComplete = status;
     }
 
+    // Toggle task as complete / pending
+       public void toggleComplete() {
+        this.isComplete = !this.isComplete;
+    }
+    
     // Get Category
     public String getCategory() {
         return this.category;
@@ -160,8 +165,7 @@ public class Task {
         }
         return true; // All dependencies are completed
     }
-
-
+    
 
     @Override
     public String toString() {
