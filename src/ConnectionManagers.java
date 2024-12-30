@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 public class ConnectionManagers {
     //change depending on path
-    private static String url = "jdbc:sqlite:/Users/theng/To-Do List App/src/tasks.db";
+    private static String url = "jdbc:sqlite:C:/Users/60115/IdeaProjects/To-Do-List-App2/src/tasks.db";
 
     public static void main(String[] args) {
         ConnectionManagers cm = new ConnectionManagers();

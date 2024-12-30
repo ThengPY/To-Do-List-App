@@ -147,6 +147,13 @@ public class App extends Application {
         setEmailButton.setOnAction(e -> {
             userEmail = emailField.getText().trim();
             if (!userEmail.isEmpty()) {
+                // Show an announcement successful add an email
+                Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                successAlert.setTitle("Success");
+                successAlert.setHeaderText("Congrats! Email Successfully Saved");
+                successAlert.setContentText("Email reminders have been set for: " + userEmail);
+                successAlert.showAndWait();
+
                 System.out.println("Email set for reminders: " + userEmail);
                 startEmailReminderTask();
             } else {
