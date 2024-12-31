@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 // import java.time.Instant;
 // import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 
 public class ConnectionManagers {
     //change depending on path
-    private static String url = "jdbc:sqlite:C:/Users/60115/IdeaProjects/To-Do-List-App2/src/tasks.db";
+    private static String url = "jdbc:sqlite:/Users/theng/To-Do List App/src/tasks.db";
 
     public static void main(String[] args) {
         ConnectionManagers cm = new ConnectionManagers();
@@ -217,20 +218,33 @@ public class ConnectionManagers {
             e.printStackTrace();
         }
     }
-
+    
     public ArrayList<Task> getTasksDueIn24Hours() {
         ArrayList<Task> tasksDueSoon = new ArrayList<>();
         String query = "SELECT * FROM tasklist WHERE dueDate IS NOT NULL";
-
+        
         try (Connection con = DriverManager.getConnection(url)) {
             Statement statement = con.createStatement();
             ResultSet resultSet = statement.executeQuery(query);
-
+    
+            // Get the current date
+            LocalDate now = LocalDate.now(); // Get today's date
+            System.out.println("Current Date: " + now); // Debug current date
+    
             while (resultSet.next()) {
                 String dueDateStr = resultSet.getString("dueDate");
-                LocalDate dueDate = LocalDate.parse(dueDateStr);
-
-                if (dueDate.minusDays(1).equals(LocalDate.now())) {
+    
+                if (dueDateStr == null || "None".equals(dueDateStr)) {
+                    continue; // Skip tasks with invalid or null due dates
+                }
+    
+                LocalDate dueDate = LocalDate.parse(dueDateStr); // Convert the string to LocalDate
+    
+                // Check if the task is due within the next 24 hours
+                long hoursUntilDue = ChronoUnit.HOURS.between(now.atStartOfDay(), dueDate.atStartOfDay());
+    
+                // If the task is due in the next 24 hours (inclusive)
+                if (hoursUntilDue > 0 && hoursUntilDue <= 24) {
                     Task task = new Task(
                             resultSet.getInt("taskNumber"),
                             resultSet.getString("title"),
@@ -241,14 +255,18 @@ public class ConnectionManagers {
                             resultSet.getString("recurrence")
                     );
                     tasksDueSoon.add(task);
+                    System.out.println("Task Due Soon: " + task.getTitle() + " - Due: " + task.getDueDate()); // Debugging output
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-
+    
+        // Debugging output to check if any tasks were found
+        System.out.println("No. of Tasks Due in 24 Hours: " + tasksDueSoon.size());
         return tasksDueSoon;
     }
+
 }
 
 

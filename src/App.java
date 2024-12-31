@@ -362,7 +362,7 @@ public class App extends Application {
     private void startEmailReminderTask() {
         // Start a scheduled task that runs every 24 hours to check for tasks due in 24 hours
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> sendTaskReminderEmails(), 0, 24, TimeUnit.HOURS);
+        scheduler.scheduleAtFixedRate(() -> sendTaskReminderEmails(), 0, 2, TimeUnit.MINUTES); // send reminder every 2 mins (can change)
     }
 
     private void sendTaskReminderEmails() {
@@ -378,18 +378,28 @@ public class App extends Application {
             System.out.println("No tasks due in the next 24 hours.");
             return;
         }
-        for (Task task : tasksDueSoon) {
-            String subject = "Task Reminder: " + task.getTitle();
-            String content = "You have a task due in 24 hours:\n\n" +
-                    "Title: " + task.getTitle() + "\n" +
-                    "Description: " + task.getDescription() + "\n" +
-                    "Due Date: " + task.getDueDate() + "\n" +
-                    "Category: " + task.getCategory() + "\n" +
-                    "Priority: " + task.getPriority() + "\n";
 
-            // Call a method to send the email
-            EmailNotification.sendEmail(userEmail, subject, content);
+        // Construct the email subject and content
+        String subject = "Reminder: " + tasksDueSoon.size() + " task(s) due in 24 hours!";
+
+        // Start the content with an introductory line
+        StringBuilder content = new StringBuilder();
+        content.append("Task(s) due in 24 hours:\n\n");
+
+        // Loop through each task and add details to the email content
+        for (int i = 0; i < tasksDueSoon.size(); i++) {
+            Task task = tasksDueSoon.get(i);  // Get the task at index i
+            content.append(i + 1).append(". Title: ")  // Add the index (i+1 to start from 1)
+                    .append(task.getTitle()).append("\n")
+                    .append("    Description: ").append(task.getDescription()).append("\n")
+                    .append("    Due Date: ").append(task.getDueDate()).append("\n")
+                    .append("    Category: ").append(task.getCategory()).append("\n")
+                    .append("    Priority: ").append(task.getPriority()).append("\n")
+                    .append("\n"); // Add an extra newline for separation between tasks
         }
+
+        // Call the method to send the email 
+        EmailNotification.sendEmail(userEmail, subject, content.toString());
     }
 
     //Tasks Functions

@@ -6,8 +6,8 @@ public class EmailNotification {
 
     public static void sendEmail(String recipient, String subject, String content) {
         // Email configuration
-        final String senderEmail = "lojingyang051104@gmail.com"; // Replace with your email
-        final String senderAppPassword = "hcaz vsjh ngsx eixs";  // Replace with your app password
+        final String senderEmail = "thengpy05@gmail.com"; // Replace with your email
+        final String senderAppPassword = "piei vvru jfxr rkhj";  // Replace with your app password
 
         // SMTP server settings for Gmail
         Properties properties = new Properties();
@@ -43,7 +43,7 @@ public class EmailNotification {
 
     public static void main(String[] args) {
         // Test email details
-        String testRecipient = "jingyanglo1104@gmail.com"; // Replace with a valid recipient email
+        String testRecipient = "thengpy05@gmail.com"; // Replace with a valid recipient email
         String testSubject = "Test Email Subject";
         String testContent = "This is a test email sent from the Java program.";
 
