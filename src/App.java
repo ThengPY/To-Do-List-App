@@ -355,7 +355,7 @@ public class App extends Application {
         });
 
         // Setting the scene
-        Scene scene = new Scene(layout, 790, 900);
+        Scene scene = new Scene(layout, 790, 840);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -364,7 +364,7 @@ public class App extends Application {
     private void startEmailReminderTask() {
         // Start a scheduled task that runs every 24 hours to check for tasks due in 24 hours
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(() -> sendTaskReminderEmails(), 0, 2, TimeUnit.MINUTES); // send reminder every 2 mins (can change)
+        scheduler.scheduleAtFixedRate(() -> sendTaskReminderEmails(), 0, 6, TimeUnit.HOURS); // send reminder every 6h
     }
 
     private void sendTaskReminderEmails() {
@@ -865,34 +865,44 @@ public class App extends Application {
         return (double) getCompletedTasks() / getTotalTasks() * 100;
     }
 
-    // Method to calculate categorized task summary
-    private String getCategorizedTaskSummary() {
-        HashMap<String, Integer> categoryCount = new HashMap<>();
-        for (Task task : tasks) {
-            String category = task.getCategory();
-            if (category != null && !category.equalsIgnoreCase("None")) {
-                categoryCount.put(category, categoryCount.getOrDefault(category, 0) + 1);
+        // Method to calculate categorized task summary
+        private String getCategorizedTaskSummary() {
+            HashMap<String, Integer> categoryCount = new HashMap<>();
+            for (Task task : tasks) {
+                String category = task.getCategory();
+                if (category != null && !category.equalsIgnoreCase("None")) {
+                    categoryCount.put(category, categoryCount.getOrDefault(category, 0) + 1);
+                }
             }
+        
+            StringBuilder summary = new StringBuilder();
+            int totalCategories = categoryCount.size();
+            int counter = 0;
+        
+            for (String category : categoryCount.keySet()) {
+                summary.append(" ").append(category).append(": ").append(categoryCount.get(category));
+        
+                // Add comma if it's not the last category
+                if (++counter < totalCategories) {
+                    summary.append(", ");
+                }
+            }
+        
+            return summary.toString();  // No trailing comma or extra space
         }
-        StringBuilder summary = new StringBuilder();
-        for (String category : categoryCount.keySet()) {
-            summary.append("   ").append(category).append(": ").append(categoryCount.get(category)).append("\n"); // Add two spaces before every category
+        
+        // Update the analytics dashboard
+        private void updateAnalyticsDashboard(Label totalTasksLabel, Label completedTasksLabel, Label pendingTasksLabel, Label completionRateLabel, Label taskCategoriesLabel) {
+            totalTasksLabel.setText("- Total tasks: " + getTotalTasks());
+            completedTasksLabel.setText("- Completed: " + getCompletedTasks());
+            pendingTasksLabel.setText("- Pending: " + getPendingTasks());
+            completionRateLabel.setText("- Completion Rate: " + String.format("%.2f", getCompletionRate()) + "%");
+        
+            // Enable text wrapping for the task categories label
+            taskCategoriesLabel.setWrapText(true);
+            String categories = getCategorizedTaskSummary(); // No need to trim() here since it's already trimmed
+            taskCategoriesLabel.setText("- Task Categories:" + (categories.isEmpty() ? "" : "\n  " + categories));
         }
-        return summary.toString().trim(); // Trim the trailing newline
-    }
-
-    // Update the analytics dashboard
-    private void updateAnalyticsDashboard(Label totalTasksLabel, Label completedTasksLabel, Label pendingTasksLabel, Label completionRateLabel, Label taskCategoriesLabel) {
-        totalTasksLabel.setText("- Total tasks: " + getTotalTasks());
-        completedTasksLabel.setText("- Completed: " + getCompletedTasks());
-        pendingTasksLabel.setText("- Pending: " + getPendingTasks());
-        completionRateLabel.setText("- Completion Rate: " + String.format("%.2f", getCompletionRate()) + "%");
-    
-        // Enable text wrapping for the task categories label
-        taskCategoriesLabel.setWrapText(true);
-        String categories = getCategorizedTaskSummary(); // No need to trim() here since it's already trimmed
-        taskCategoriesLabel.setText("- Task Categories:" + (categories.isEmpty() ? "" : "\n   " + categories));
-    }
     public static void main(String[] args) {
         launch(args);
     }
