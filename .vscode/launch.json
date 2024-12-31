@@ -6,7 +6,8 @@
             "name": "ConnectionManagers",
             "request": "launch",
             "mainClass": "ConnectionManagers",
-            "projectName": "To-Do List App_ea969b3d"
+            "projectName": "To-Do List App_ea969b3d",
+            "vmArgs": "-cp lib/gson-2.11.0.jar:lib/sqlite-jdbc-3.47.0.0.jar:bin"  // Add Gson JAR
         },
         {
             "type": "java",
@@ -14,14 +15,14 @@
             "request": "launch",
             "mainClass": "EmailNotification",
             "projectName": "To-Do List App_ea969b3d",
-            "vmArgs": "-cp lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"  // Adjust the classpath to include the compiled output folder (e.g., bin)
+            "vmArgs": "-cp lib/gson-2.11.0.jar:lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"  // Add Gson JAR
         },
         {
             "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}",
-            "vmArgs": "-cp lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"
+            "vmArgs": "-cp lib/gson-2.11.0.jar:lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"  // Add Gson JAR
         },
         {
             "type": "java",
@@ -29,7 +30,7 @@
             "request": "launch",
             "mainClass": "App",
             "projectName": "To-Do List App_ea969b3d",
-            "vmArgs": "--module-path /Users/theng/javafx-sdk-23.0.1/lib --add-modules javafx.controls,javafx.fxml -cp lib/sqlite-jdbc-3.47.0.0.jar:lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"
+            "vmArgs": "--module-path /Users/theng/javafx-sdk-23.0.1/lib --add-modules javafx.controls,javafx.fxml -cp lib/gson-2.11.0.jar:lib/sqlite-jdbc-3.47.0.0.jar:lib/javax.mail.jar:lib/javax.activation-1.2.0.jar:bin"  // Add Gson JAR
         }
     ]
 }

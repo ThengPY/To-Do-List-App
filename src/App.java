@@ -8,6 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public class App extends Application {
     private ArrayList<Task> tasks = new ArrayList<>();
@@ -422,7 +424,9 @@ public class App extends Application {
             }
 
             taskNumber++;
+            
             Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence,dependencies,tasks);
+
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
@@ -735,31 +739,58 @@ public class App extends Application {
         taskListView.getItems().addAll(tasks);
     }
 
-    //Search Tasks
+    //Search Tasks (Vector Search included)
     private void searchTasks() {
         String searchInput = searchField.getText().toLowerCase();
-        // Clear the current list view  
-         taskListView.getItems().clear();
+        taskListView.getItems().clear(); // Clear the current list view
 
         if (searchInput.isEmpty()) {
-        // If search input is empty, show all tasks
+            // If search input is empty, show all tasks
             taskListView.getItems().addAll(tasks);
-        } 
-        else {
-        // Add tasks that match the search input
-        for (Task task : tasks) {
-            if ((task.getTitle() != null && task.getTitle().toLowerCase().contains(searchInput)) ||
-                (task.getDescription() != null && task.getDescription().toLowerCase().contains(searchInput))) {
-                    taskListView.getItems().add(task);
+        } else {
+            // Step 1: Check for exact matches in title or description
+            List<Task> exactMatches = tasks.stream()
+                .filter(task -> {
+                    String title = task.getTitle().toLowerCase();
+                    String description = task.getDescription().toLowerCase();
+                    return title.contains(searchInput) || description.contains(searchInput);
+                })
+                .collect(Collectors.toList());
+
+            if (!exactMatches.isEmpty()) {
+                // If exact matches are found, display them
+                taskListView.getItems().addAll(exactMatches);
+            } else {
+                // Step 2: If no exact matches, perform vector search
+                try {
+                    // Generate embedding for the search query
+                    double[] queryEmbedding = EmbeddingGenerator.generateEmbedding(searchInput);
+
+                    // Add tasks that match the search input based on semantic similarity
+                    for (Task task : tasks) {
+                        // Generate embedding for the task description
+                        double[] taskEmbedding = EmbeddingGenerator.generateEmbedding(task.getDescription()); // Retrieve precomputed embedding
+
+                        // Calculate cosine similarity between the query and task embeddings
+                        double similarity = VectorSearch.cosineSimilarity(queryEmbedding, taskEmbedding);
+
+                        // If similarity is above a threshold, add the task to the results
+                        if (similarity > 0.35) { // Adjust the threshold as needed
+                            taskListView.getItems().add(task);
+                        }
+                    }
+
+                    // If no tasks match the search input, show a message
+                    if (taskListView.getItems().isEmpty()) {
+                        taskListView.getItems().addAll(tasks);
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION, "No Task Found!", ButtonType.OK);
+                        alert.showAndWait();
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error generating embeddings: " + e.getMessage());
+                }
             }
         }
-        // Tell user no task match with search input
-        if (taskListView.getItems().isEmpty()) {
-            taskListView.getItems().addAll(tasks);
-            Alert alert = new Alert(Alert.AlertType.INFORMATION, "No Task Found!", ButtonType.OK);
-            alert.showAndWait();
-        }
-    }
         searchField.clear();
     }
 

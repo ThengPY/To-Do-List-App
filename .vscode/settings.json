@@ -15,7 +15,8 @@
         "/Users/theng/javafx-sdk-23.0.1/lib/javafx.web.jar",
         "/Users/theng/javafx-sdk-23.0.1/lib/javafx.media.jar",
         "lib/javax.mail.jar",
-        "lib/javax.activation-1.2.0.jar"
+        "lib/javax.activation-1.2.0.jar",
+        "lib/gson-2.11.0.jar"
     ],
     "java.debug.settings.onBuildFailureProceed": true
 }
