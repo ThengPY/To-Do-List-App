@@ -395,6 +395,7 @@ public class App extends Application {
                     .append("    Due Date: ").append(task.getDueDate()).append("\n")
                     .append("    Category: ").append(task.getCategory()).append("\n")
                     .append("    Priority: ").append(task.getPriority()).append("\n")
+                    .append("    Recurrence: ").append(task.getReccurence()).append("\n")
                     .append("\n"); // Add an extra newline for separation between tasks
         }
 
