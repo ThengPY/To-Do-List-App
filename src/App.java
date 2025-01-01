@@ -61,6 +61,9 @@ public class App extends Application {
                 
         // Load tasks from database
         loadTasks();
+
+        // Populate the dependencies combo box
+         populateDependenciesComboBox();
         
         // Update the analytics dashboard on startup
         updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
@@ -171,6 +174,9 @@ public class App extends Application {
             if (selectedTask != null) {
                 populateDependenciesComboBox(selectedTask);
             }
+            else {
+                populateDependenciesComboBox();
+            }
         });
 
         // Layout for the email input and button
@@ -239,16 +245,21 @@ public class App extends Application {
 
         // Add Task Button
         Button addButton = new Button("Add");
-        addButton.setOnAction(e -> addTask(
-                        titleField.getText(),
-                        descriptionField.getText(),
-                        dueDatePicker.getValue(),
-                        categoryComboBox.getValue(),
-                        priorityComboBox.getValue(),
-                        recurrenceComboBox.getValue(),
-                        dependenciesComboBox.getValue()
-                )
-        );
+        addButton.setOnAction(e -> {
+            // Get the selected dependency from the combo box
+            String dependencyTitle = dependenciesComboBox.getValue();
+        
+            // Add the task with the selected dependency
+            addTask(
+                titleField.getText(),
+                descriptionField.getText(),
+                dueDatePicker.getValue(),
+                categoryComboBox.getValue(),
+                priorityComboBox.getValue(),
+                recurrenceComboBox.getValue(),
+                dependencyTitle // Pass the selected dependency
+            );
+        });
 
         // Edit Task Button
         Button editButton = new Button("Edit");
@@ -336,7 +347,7 @@ public class App extends Application {
         // Deselect task when other area / buttons are clicked
         layout.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
-            dependenciesComboBox.getItems().clear();
+            clearInputFields();
         });
         addButton.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
@@ -414,7 +425,7 @@ public class App extends Application {
         taskListView.refresh();
     }
 
-    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence,String dependencies) {
+    private void addTask(String title, String description, LocalDate dueDate, String category, String priority, String recurrence, String dependencyTitle) {
         if (title.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR, "Please enter a title.", ButtonType.OK);
             alert.showAndWait();
@@ -422,22 +433,27 @@ public class App extends Application {
             if (taskListView.getItems().isEmpty()) {
                 taskNumber = 0;
             }
-
+    
             taskNumber++;
-            
-            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence,dependencies,tasks);
-
+    
+            // Create the new task with dependencies
+            Task newTask = new Task(taskNumber, title, description, dueDate, category, priority, recurrence, dependencyTitle, tasks);
+    
+            // Add the task to the list
             tasks.add(newTask);
             taskListView.getItems().add(newTask);
             clearInputFields();
             taskListView.refresh();
             ConnectionManagers.addTask(newTask);
-
+    
             // Update the analytics dashboard
             updateAnalyticsDashboard(totalTasksLabel, completedTasksLabel, pendingTasksLabel, completionRateLabel, taskCategoriesLabel);
-
+    
+            // Refresh the dependencies combo box to include the new task
+            populateDependenciesComboBox();
+    
             // Debugging statement to verify data
-            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence()+ ", " + newTask.getDependencies().toString());
+            System.out.println("Added Task: " + newTask.getTitle() + ", " + newTask.getDescription() + ", " + newTask.getDueDate() + ", " + newTask.getCategory() + ", " + newTask.getPriority() + ", " + newTask.getReccurence() + ", " + newTask.getDependencies().toString());
         }
     }
 
@@ -538,8 +554,8 @@ public class App extends Application {
     private void populateDependenciesComboBox() {
         dependenciesComboBox.getItems().clear(); // Clear existing items
         for (Task task : tasks) {
-            // Check if the task is not already a dependency
-                dependenciesComboBox.getItems().add(task.getTitle()); // Add task titles to the combo box
+            // Add task titles to the combo box
+            dependenciesComboBox.getItems().add(task.getTitle());
         }
     }
 
