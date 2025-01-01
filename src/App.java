@@ -779,15 +779,14 @@ public class App extends Application {
                             taskListView.getItems().add(task);
                         }
                     }
-
-                    // If no tasks match the search input, show a message
-                    if (taskListView.getItems().isEmpty()) {
-                        taskListView.getItems().addAll(tasks);
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION, "No Task Found!", ButtonType.OK);
-                        alert.showAndWait();
-                    }
                 } catch (IOException e) {
                     System.out.println("Error generating embeddings: " + e.getMessage());
+                }
+                // If no tasks match the search input, show a message
+                if (taskListView.getItems().isEmpty()) {
+                    taskListView.getItems().addAll(tasks); // Add all tasks back if no results are found
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION, "No Task Found!", ButtonType.OK);
+                    alert.showAndWait();
                 }
             }
         }
