@@ -793,7 +793,7 @@ public class App extends Application {
                         // If similarity is above a threshold, add the task to the results
                         if (similarity > 0.35) { // Adjust the threshold as needed
                             taskListView.getItems().add(task);
-                        }
+                        } 
                     }
                 } catch (IOException e) {
                     System.out.println("Error generating embeddings: " + e.getMessage());
@@ -916,7 +916,7 @@ public class App extends Application {
             // Enable text wrapping for the task categories label
             taskCategoriesLabel.setWrapText(true);
             String categories = getCategorizedTaskSummary(); // No need to trim() here since it's already trimmed
-            taskCategoriesLabel.setText("- Task Categories:" + (categories.isEmpty() ? "" : "\n  " + categories));
+            taskCategoriesLabel.setText("- Task Categories:" + (categories.isEmpty() ? " None" : "\n  " + categories));
         }
     public static void main(String[] args) {
         launch(args);
