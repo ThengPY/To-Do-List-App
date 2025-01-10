@@ -352,7 +352,7 @@ public class App extends Application {
         // Adding a border around the layout
         layout.setStyle("-fx-border-color: gray; -fx-border-width: 2; -fx-padding: 10 20 10 10;"); // Added 20 pixels of padding to the right
 
-        // Deselect task other buttons are clicked
+        // Deselect task when other buttons are clicked
         addButton.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
         });
