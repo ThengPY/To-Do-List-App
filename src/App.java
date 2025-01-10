@@ -146,6 +146,7 @@ public class App extends Application {
 
         // Email input field
         Label emailLabel = new Label("Email Address for Reminders: ");
+        emailLabel.setStyle("-fx-font-weight: bold");
         emailField.setPromptText("Your Email Address");
 
         // Button to set email address
@@ -185,7 +186,7 @@ public class App extends Application {
 
         // Mark As Complete Label
         Label markAsComplete = new Label("* Right click on task to mark as complete");
-        markAsComplete.setStyle("-fx-font-size: 10;");
+        markAsComplete.setStyle("-fx-font-size: 10; -fx-font-weight: bold");
 
         // Add / Edit / Delete Task Label
         Label addDelete = new Label("=== Add / Edit / Delete Tasks ===");
@@ -270,6 +271,13 @@ public class App extends Application {
         // buttonBorder(deleteButton);
         deleteButton.setOnAction(e -> deleteTask());
 
+        // Clear Input Fields Button
+        Button clearButton = new Button("Clear");
+        clearButton.setOnAction(e -> {
+            clearInputFields();
+            taskListView.getSelectionModel().clearSelection();
+        });
+
         //Sort Tasks Buttons
         Label sortBy = new Label("======== Sort Tasks ========");
         sortBy.setStyle("-fx-font-weight: bold");
@@ -293,7 +301,7 @@ public class App extends Application {
         });
 
         // Buttons Layout (Add, Edit, Delete)
-        HBox buttonLayout1 = new HBox(15, addButton, editButton, deleteButton);
+        HBox buttonLayout1 = new HBox(7, addButton, editButton, deleteButton, clearButton);
 
         // Buttons Layout (Sort by Due Date)
         HBox buttonLayout2 = new HBox(15, dueDateAscending, dueDateDescending);
@@ -347,7 +355,6 @@ public class App extends Application {
         // Deselect task when other area / buttons are clicked
         layout.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
-            clearInputFields();
         });
         addButton.setOnMouseClicked(e -> {
             taskListView.getSelectionModel().clearSelection();
