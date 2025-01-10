@@ -589,7 +589,7 @@ public class App extends Application {
     //Due Date Ascending
     public void sortDuedateAscending() {
         
-        for (int i = 0; i < tasks.size() -1; i++) {
+        for (int i = 0; i < tasks.size() - 1; i++) {
             for (int j = i + 1; j < tasks.size(); j++) {
                 Task task1 = tasks.get(i);
                 Task task2 = tasks.get(j);
@@ -769,14 +769,14 @@ public class App extends Application {
             taskListView.getItems().addAll(tasks);
         } else {
             // Step 1: Check for exact matches in title or description
-            List<Task> exactMatches = tasks.stream()
-                .filter(task -> {
-                    String title = task.getTitle().toLowerCase();
-                    String description = task.getDescription().toLowerCase();
-                    return title.contains(searchInput) || description.contains(searchInput);
-                })
-                .collect(Collectors.toList());
-
+            List<Task> exactMatches = new ArrayList<>();
+            for (Task task : tasks) {
+                String title = task.getTitle().toLowerCase();
+                String description = task.getDescription().toLowerCase();
+                if (title.contains(searchInput) || description.contains(searchInput)) {
+                    exactMatches.add(task);
+                }
+            }
             if (!exactMatches.isEmpty()) {
                 // If exact matches are found, display them
                 taskListView.getItems().addAll(exactMatches);
